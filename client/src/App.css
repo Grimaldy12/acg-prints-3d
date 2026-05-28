@@ -1517,9 +1517,15 @@ select.form-select option {
 
 /* ── Recent Sales Dashboard Table ───────────────────────────── */
 .recent-sales-list {
-  width: 100%;
-  overflow-x: auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  display: block !important;
   -webkit-overflow-scrolling: touch;
+}
+
+.recent-sales-list .data-table {
+  min-width: 480px !important; /* Force table to overflow and scroll instead of squishing */
 }
 
 .data-table {
