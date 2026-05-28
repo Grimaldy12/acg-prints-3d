@@ -1585,3 +1585,215 @@ rect.recharts-tooltip-cursor {
   fill: rgba(255, 255, 255, 0.03) !important;
   fill-opacity: 1 !important;
 }
+
+/* ── Kanban Board & Orders Styles ────────────────────────── */
+.kanban-board {
+  display: flex;
+  gap: var(--space-lg);
+  overflow-x: auto;
+  padding-bottom: var(--space-lg);
+  min-height: calc(100vh - 280px);
+  align-items: flex-start;
+}
+
+.kanban-column {
+  flex: 1;
+  min-width: 280px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kanban-column-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.kanban-column-count {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Status Specific Column Accents */
+.kanban-column.cola { border-top: 3px solid #8B5CF6; }
+.kanban-column.imprimiendo { border-top: 3px solid #00D4AA; }
+.kanban-column.terminado { border-top: 3px solid #EC4899; }
+.kanban-column.entregado { border-top: 3px solid #22C55E; }
+
+.kanban-column.cola .kanban-column-title { color: #8B5CF6; }
+.kanban-column.imprimiendo .kanban-column-title { color: #00D4AA; }
+.kanban-column.terminado .kanban-column-title { color: #EC4899; }
+.kanban-column.entregado .kanban-column-title { color: #22C55E; }
+
+/* Kanban Cards */
+.kanban-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: var(--shadow-md);
+}
+
+.kanban-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.kanban-card-client {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.kanban-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.kanban-card-money {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kanban-card-price {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.kanban-card-deposit {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.kanban-card-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+/* Custom order badges */
+.badge-cola {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8B5CF6;
+}
+.badge-cola .badge-dot {
+  background: #8B5CF6;
+}
+
+.badge-imprimiendo {
+  background: rgba(0, 212, 170, 0.12);
+  color: #00D4AA;
+}
+.badge-imprimiendo .badge-dot {
+  background: #00D4AA;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.badge-terminado {
+  background: rgba(236, 72, 153, 0.12);
+  color: #EC4899;
+}
+.badge-terminado .badge-dot {
+  background: #EC4899;
+}
+
+/* Quick contact buttons */
+.btn-whatsapp {
+  background: rgba(37, 211, 102, 0.1);
+  color: #25D366;
+  border: 1px solid rgba(37, 211, 102, 0.15);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-whatsapp:hover {
+  background: rgba(37, 211, 102, 0.2);
+  color: #25D366;
+  box-shadow: 0 0 8px rgba(37, 211, 102, 0.2);
+}
+
+.deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.deadline-badge.normal {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.deadline-badge.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+}
+
+.deadline-badge.danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+

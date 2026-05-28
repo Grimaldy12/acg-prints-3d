@@ -24,15 +24,17 @@ router.get('/summary', async (req, res) => {
     const monthPrefix = `${year}-${month}`; // YYYY-MM
 
     // Fetch all collections in parallel for maximum speed
-    const [salesSnap, expensesSnap, customersSnap, productsSnap] = await Promise.all([
+    const [salesSnap, expensesSnap, customersSnap, productsSnap, ordersSnap] = await Promise.all([
       db.collection('sales').get(),
       db.collection('expenses').get(),
       db.collection('customers').get(),
-      db.collection('products').get()
+      db.collection('products').get(),
+      db.collection('orders').get()
     ]);
 
     const sales = salesSnap.docs.map(doc => doc.data());
     const expenses = expensesSnap.docs.map(doc => doc.data());
+    const orders = ordersSnap.docs.map(doc => doc.data());
 
     // Filter sales for the current month (where status !== 'cancelado')
     const currentMonthSales = sales.filter(s => 
@@ -59,6 +61,9 @@ router.get('/summary', async (req, res) => {
         total_customers: customersSnap.size,
         total_products: productsSnap.size,
         sales_count_month: salesCountMonth,
+        active_orders_count: orders.filter(o => o.status === 'cola' || o.status === 'imprimiendo').length,
+        finished_orders_count: orders.filter(o => o.status === 'terminado').length,
+        total_active_deposits: orders.filter(o => o.status !== 'entregado' && o.status !== 'cancelado').reduce((sum, o) => sum + (Number(o.deposit) || 0), 0)
       },
     });
   } catch (err) {

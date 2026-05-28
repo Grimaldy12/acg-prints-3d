@@ -15,11 +15,13 @@ import {
   Users,
   Receipt,
   LogOut,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../../App.jsx';
 
 const navItems = [
   { to: '/',        icon: LayoutDashboard, label: 'Dashboard',  end: true },
+  { to: '/pedidos', icon: ClipboardList,   label: 'Pedidos' },
   { to: '/ventas',  icon: ShoppingCart,    label: 'Ventas' },
   { to: '/productos', icon: Package,      label: 'Productos' },
   { to: '/clientes',  icon: Users,        label: 'Clientes' },

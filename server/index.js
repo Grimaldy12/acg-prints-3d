@@ -21,6 +21,7 @@ const customersRoutes = require('./routes/customers');
 const salesRoutes = require('./routes/sales');
 const expensesRoutes = require('./routes/expenses');
 const dashboardRoutes = require('./routes/dashboard');
+const ordersRoutes = require('./routes/orders');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -44,6 +45,7 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // ─── Health check ───────────────────────────
 app.get('/api/health', (req, res) => {

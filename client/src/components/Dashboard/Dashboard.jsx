@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import {
   LayoutDashboard, TrendingUp, TrendingDown, DollarSign,
-  Users, ShoppingCart, Package, ArrowRight, Loader2
+  Users, ShoppingCart, Package, ArrowRight, Loader2, Printer, ClipboardList
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -154,6 +154,34 @@ export default function Dashboard() {
           value={summary?.total_customers || 0}
           color="#8B5CF6"
         />
+      </div>
+
+      {/* Production and Active Orders Summary */}
+      <div style={{ marginTop: '32px', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Printer size={18} style={{ color: 'var(--accent-cyan)' }} />
+          Producción y Pedidos Activos
+        </h2>
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <StatCard
+            icon={ClipboardList}
+            label="Pedidos Activos (Cola/Impr.)"
+            value={summary?.active_orders_count || 0}
+            color="#8B5CF6"
+          />
+          <StatCard
+            icon={Printer}
+            label="Pedidos Terminados (Listo)"
+            value={summary?.finished_orders_count || 0}
+            color="#EC4899"
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Señas en Caja Activas"
+            value={formatCurrency(summary?.total_active_deposits || 0)}
+            color="#00D4AA"
+          />
+        </div>
       </div>
 
       {/* Charts Grid */}
