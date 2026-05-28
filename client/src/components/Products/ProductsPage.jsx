@@ -87,16 +87,11 @@ export default function ProductsPage() {
   });
 
   return (
-    <div className="products-page page-container animate-fade-in" style={{ padding: '24px' }}>
-      <div className="page-header" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
+    <div className="products-page page-container animate-fade-in">
+      <div className="page-header">
         <div>
-          <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-text-primary)' }}>Productos</h1>
-          <p className="page-subtitle" style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
+          <h1 className="page-title">Productos</h1>
+          <p className="page-subtitle">
             Gestiona tu catálogo, costos de filamento y precios de venta
           </p>
         </div>
