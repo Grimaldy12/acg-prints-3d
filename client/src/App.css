@@ -98,6 +98,7 @@
 
 .main-content {
   flex: 1;
+  min-width: 0;
   margin-left: var(--sidebar-width);
   padding: var(--space-xl) var(--space-2xl);
   min-height: 100vh;
@@ -1394,9 +1395,13 @@ select.form-select option {
 
 @media (max-width: 991px) {
   .main-content {
-    margin-left: 0;
-    padding: var(--space-lg) var(--space-md);
-    padding-top: calc(var(--space-lg) + 60px);
+    margin-left: 0 !important;
+    padding: var(--space-lg) var(--space-md) !important;
+    padding-top: calc(var(--space-lg) + 60px) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
   }
 
   .mobile-toggle {
@@ -1408,11 +1413,11 @@ select.form-select option {
   }
 
   .sidebar {
-    transform: translateX(-100%);
+    transform: translateX(-100%) !important;
   }
 
   .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
 
   .stats-row, .stats-grid {
@@ -1430,13 +1435,30 @@ select.form-select option {
   }
 
   .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: var(--space-sm) !important;
   }
 
   .filter-bar .form-input,
-  .search-input-wrap {
-    max-width: 100%;
+  .filter-bar select,
+  .filter-bar input,
+  .search-input-wrap,
+  .search-input-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .filter-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
   }
 
   .products-grid {
