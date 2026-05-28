@@ -3,10 +3,12 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure the data directory exists before the database module initializes
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+// Ensure the data directory exists before the database module initializes (skipped on Vercel)
+if (!process.env.VERCEL) {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
 }
 
 // Import database (starts async init)
