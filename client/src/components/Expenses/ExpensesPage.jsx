@@ -103,16 +103,11 @@ export default function ExpensesPage() {
     .sort((a, b) => b.amount - a.amount);
 
   return (
-    <div className="expenses-page page-container animate-fade-in" style={{ padding: '24px' }}>
-      <div className="page-header" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
+    <div className="expenses-page page-container animate-fade-in">
+      <div className="page-header">
         <div>
-          <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-text-primary)' }}>Gastos</h1>
-          <p className="page-subtitle" style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
+          <h1 className="page-title">Gastos</h1>
+          <p className="page-subtitle">
             Registra egresos de material, mantenimiento de impresoras, electricidad y otros gastos operativos
           </p>
         </div>
@@ -127,7 +122,7 @@ export default function ExpensesPage() {
       {/* Summary Cards */}
       <div className="expenses-summary-row" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
         gap: '20px',
         marginBottom: '24px'
       }}>
@@ -295,12 +290,7 @@ export default function ExpensesPage() {
           )}
         </div>
       ) : (
-        <div className="table-responsive" style={{
-          backgroundColor: 'var(--color-surface)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          overflow: 'hidden'
-        }}>
+        <div className="table-container">
           <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>

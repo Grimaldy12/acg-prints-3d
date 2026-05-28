@@ -1392,7 +1392,7 @@ select.form-select option {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .main-content {
     margin-left: 0;
     padding: var(--space-lg) var(--space-md);

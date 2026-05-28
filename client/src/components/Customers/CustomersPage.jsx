@@ -104,16 +104,11 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="customers-page page-container animate-fade-in" style={{ padding: '24px' }}>
-      <div className="page-header" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
+    <div className="customers-page page-container animate-fade-in">
+      <div className="page-header">
         <div>
-          <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--color-text-primary)' }}>Clientes</h1>
-          <p className="page-subtitle" style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
+          <h1 className="page-title">Clientes</h1>
+          <p className="page-subtitle">
             Gestiona tus clientes, datos de contacto e historial de compras
           </p>
         </div>
@@ -126,12 +121,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="filter-bar" style={{
-        display: 'flex',
-        gap: '16px',
-        marginBottom: '24px',
-        alignItems: 'center'
-      }}>
+      <div className="filter-bar">
         <div className="search-input-wrapper" style={{ position: 'relative', flex: '1', maxWidth: '400px' }}>
           <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
@@ -171,12 +161,7 @@ export default function CustomersPage() {
           )}
         </div>
       ) : (
-        <div className="table-responsive" style={{
-          backgroundColor: 'var(--color-surface)',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          overflow: 'hidden'
-        }}>
+        <div className="table-container">
           <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
@@ -295,7 +280,7 @@ export default function CustomersPage() {
                                 Este cliente no tiene compras registradas.
                               </div>
                             ) : (
-                              <div className="table-responsive">
+                              <div className="table-container">
                                 <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
                                   <thead>
                                     <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', textAlign: 'left' }}>
