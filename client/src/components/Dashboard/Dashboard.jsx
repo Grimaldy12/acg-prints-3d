@@ -17,14 +17,14 @@ const PIE_COLORS = ['#00D4AA', '#8B5CF6', '#F5A623', '#EF4444', '#3B82F6', '#EC4
 function StatCard({ icon: Icon, label, value, color, trend }) {
   return (
     <div className="stat-card">
-      <div className="stat-card-icon" style={{ background: `${color}20`, color }}>
+      <div className="stat-icon" style={{ background: `${color}20`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '10px', flexShrink: 0 }}>
         <Icon size={24} />
       </div>
-      <div className="stat-card-info">
-        <span className="stat-card-label">{label}</span>
-        <span className="stat-card-value">{value}</span>
+      <div className="stat-info" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <span className="stat-label" style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{label}</span>
+        <span className="stat-value" style={{ display: 'block', fontSize: '1.4rem', fontWeight: '700', color: 'var(--text-primary)' }}>{value}</span>
         {trend !== undefined && (
-          <span className={`stat-card-trend ${trend >= 0 ? 'positive' : 'negative'}`}>
+          <span className={`stat-trend ${trend >= 0 ? 'up' : 'down'}`}>
             {trend >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {Math.abs(trend)}%
           </span>

@@ -1467,10 +1467,24 @@ select.form-select option {
   .loading-skeleton-stats {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* Responsive Kanban Board Stack */
+  .kanban-board {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+  }
+
+  .kanban-column {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
 }
 
 @media (max-width: 480px) {
-  .stats-row {
+  .stats-row, .stats-grid {
     grid-template-columns: 1fr;
   }
 
