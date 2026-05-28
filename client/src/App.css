@@ -1516,6 +1516,12 @@ select.form-select option {
 }
 
 /* ── Recent Sales Dashboard Table ───────────────────────────── */
+.recent-sales-list {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -1532,6 +1538,7 @@ select.form-select option {
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.01);
+  white-space: nowrap;
 }
 
 .data-table td {
@@ -1539,6 +1546,7 @@ select.form-select option {
   font-size: 0.9rem;
   color: var(--text-secondary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
 }
 
 .data-table tbody tr {
