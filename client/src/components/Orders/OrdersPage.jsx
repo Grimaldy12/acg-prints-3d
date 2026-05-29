@@ -303,7 +303,7 @@ export default function OrdersPage() {
     const balance = order.total_price - order.deposit;
 
     if (type === 'registered') {
-      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}". \n\n💰 *Total:* ${formatCurrency(order.total_price)}\n💵 *Seña:* ${formatCurrency(order.deposit)}\n💳 *Saldo Pendiente:* ${formatCurrency(balance)}\n\n¡Te avisaremos cuando esté listo en nuestras impresoras! 🛠️`;
+      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}". \n\n💰 *Total:* ${formatCurrency(order.total_price)}\n💵 *Adelanto:* ${formatCurrency(order.deposit)}\n💳 *Saldo Pendiente:* ${formatCurrency(balance)}\n\n¡Te avisaremos cuando esté listo en nuestras impresoras! 🛠️`;
     } else if (type === 'finished') {
       message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🎉. ¡Tu pedido está listo y terminado! Puedes pasar a retirarlo cuando gustes.\n\n💳 *Saldo Pendiente a abonar:* ${formatCurrency(balance)}\n\n¡Gracias por tu confianza! 🌟`;
     }
@@ -333,7 +333,7 @@ export default function OrdersPage() {
       <div className="page-header">
         <div>
           <h1>Control de Pedidos</h1>
-          <p>Supervisa la producción en cola, impresiones activas, señas y entregas</p>
+          <p>Supervisa la producción en cola, impresiones activas, adelantos y entregas</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <div className="btn-group" style={{ display: 'inline-flex', background: 'var(--bg-surface)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', padding: '2px' }}>
@@ -468,7 +468,7 @@ export default function OrdersPage() {
                           <span className="kanban-card-price">{formatCurrency(order.total_price)}</span>
                           {order.deposit > 0 && (
                             <span className="kanban-card-deposit">
-                              Seña: {formatCurrency(order.deposit)} (Sald: {formatCurrency(balance)})
+                              Adelanto: {formatCurrency(order.deposit)} (Sald: {formatCurrency(balance)})
                             </span>
                           )}
                         </div>
@@ -559,7 +559,7 @@ export default function OrdersPage() {
                 <th>Detalles / Impresión</th>
                 <th>Fecha Entrega</th>
                 <th>Total</th>
-                <th>Seña Recaudada</th>
+                <th>Adelanto Recibido</th>
                 <th>Saldo Pendiente</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -724,6 +724,13 @@ export default function OrdersPage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Fila de títulos para las columnas */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', paddingBottom: '4px', borderBottom: '1px dashed rgba(255,255,255,0.06)', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Producto</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Cantidad</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Precio Unit.</span>
+                    <span style={{ width: '28px' }}></span>
+                  </div>
                   {orderItems.map((item, index) => (
                     <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '10px', alignItems: 'center' }}>
                       <select
@@ -786,7 +793,7 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Seña / Adelanto Recibido ($)</label>
+                <label className="form-label">Adelanto Recibido ($)</label>
                 <input
                   type="number"
                   step="0.01"

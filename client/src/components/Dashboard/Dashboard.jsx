@@ -177,7 +177,7 @@ export default function Dashboard() {
           />
           <StatCard
             icon={DollarSign}
-            label="Señas en Caja Activas"
+            label="Adelantos en Caja Activos"
             value={formatCurrency(summary?.total_active_deposits || 0)}
             color="#00D4AA"
           />
