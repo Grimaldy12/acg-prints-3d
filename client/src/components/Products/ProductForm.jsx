@@ -128,8 +128,8 @@ export default function ProductForm({ product, onSave, onCancel }) {
         </div>
       </div>
 
-      <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-        <div className="form-group" style={{ position: 'relative' }}>
+      <div className="form-row form-row-3col">
+        <div className="form-group" style={{ position: 'relative', zIndex: showCalculator ? 20 : 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <label className="form-label" style={{ margin: 0 }}>Costo de Material ($)</label>
             <button
@@ -159,16 +159,19 @@ export default function ProductForm({ product, onSave, onCancel }) {
               position: 'absolute',
               top: '55px',
               left: 0,
-              right: 0,
-              backgroundColor: 'var(--color-bg-card)',
+              width: '340px',
+              maxWidth: 'calc(100vw - 48px)',
+              backgroundColor: 'var(--bg-card)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: 'var(--radius-md)',
               padding: '12px',
-              zIndex: 10,
+              zIndex: 30,
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
             }}>
               <h4 style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
                 🧮 Costo por Peso (Gramos)

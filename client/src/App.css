@@ -593,6 +593,11 @@ select.form-select option {
   gap: var(--space-md);
 }
 
+.form-row-3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
