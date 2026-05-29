@@ -224,17 +224,17 @@ export default function SalesPage() {
                   const itemCount = sale.items?.length || 0;
                   const firstItem = sale.items?.[0];
                   const productDisplay = itemCount > 1
-                    ? `${firstItem?.product?.name || firstItem?.productName || 'Producto'} +${itemCount - 1}`
-                    : (firstItem?.product?.name || firstItem?.productName || `${itemCount} producto(s)`);
+                    ? `${firstItem?.product?.name || firstItem?.productName || firstItem?.product_name || 'Producto'} +${itemCount - 1}`
+                    : (firstItem?.product?.name || firstItem?.productName || firstItem?.product_name || `${itemCount} producto(s)`);
 
                   return (
                     <tr key={saleId}>
                       <td style={{ color: 'var(--text-muted)' }}>
                         {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td>{formatDate(sale.date || sale.createdAt)}</td>
+                      <td>{formatDate(sale.date || sale.createdAt || sale.created_at)}</td>
                       <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                        {sale.customer?.name || sale.customerName || '—'}
+                        {sale.customer?.name || sale.customerName || sale.customer_name || '—'}
                       </td>
                       <td>{productDisplay}</td>
                       <td style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>
