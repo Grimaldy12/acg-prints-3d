@@ -127,11 +127,11 @@ router.post('/', async (req, res) => {
     // If order is created directly as 'entregado', automatically log as completed sale
     if (newOrder.status === 'entregado') {
       const newSale = {
-        customer_id: newOrder.customer_id,
+        customer_id: newOrder.status === 'entregado' ? newOrder.customer_id : null,
         customer_name: newOrder.customer_name,
         total: newOrder.total_price,
         discount: 0,
-        status: 'completada',
+        status: 'entregado',
         notes: `Pedido creado y entregado: ${newOrder.description || ''}`,
         items: newOrder.items,
         created_at: new Date().toISOString()
@@ -225,7 +225,7 @@ router.put('/:id', async (req, res) => {
         customer_name: updatedOrder.customer_name,
         total: updatedOrder.total_price,
         discount: 0,
-        status: 'completada',
+        status: 'entregado',
         notes: `Pedido entregado: ${updatedOrder.description || ''}`,
         items: updatedOrder.items,
         created_at: new Date().toISOString()
