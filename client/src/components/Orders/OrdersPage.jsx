@@ -309,7 +309,7 @@ export default function OrdersPage() {
     const balance = order.total_price - order.deposit;
 
     if (type === 'registered') {
-      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}". \n\n💰 *Total:* ${formatCurrency(order.total_price)}\n💵 *Adelanto:* ${formatCurrency(order.deposit)}\n💳 *Saldo Pendiente:* ${formatCurrency(balance)}\n\n*Por favor, ayúdanos a confirmar tus datos de facturación y entrega:*\n📝 *Nombre completo:* ${name}\n🪪 *Cédula de Identidad:* ${order.customer_cedula || '✍️ (Por favor, respóndenos con tu número de cédula)'}\n📞 *Número de contacto:* ${order.customer_phone || '✍️ (Por favor, respóndenos con tu número)'}\n\n¡Te avisaremos apenas tu pedido esté listo en nuestras impresoras 3D! 🛠️`;
+      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}".\n\nPor favor, ayúdanos a confirmar tus datos de facturación y entrega:\n📌 *Nombre completo:* ${name}\n📌 *Cédula de Identidad:* ${order.customer_cedula || '(Por favor, respóndenos con tu número de cédula)'}\n📌 *Número de contacto:* ${order.customer_phone || ''}\n📌 *Confirmación del color a requerir:* ?\n📌 *Si no eres la persona que va a retirar coloca el nombre de la persona aquí:*\n\n¡Te avisaremos apenas tu pedido esté listo en nuestras impresoras 3D! 🛠️`;
     } else if (type === 'finished') {
       message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🎉. ¡Tu pedido está listo y terminado! Puedes pasar a retirarlo cuando gustes.\n\n💳 *Saldo Pendiente a abonar:* ${formatCurrency(balance)}\n\n¡Gracias por tu confianza! 🌟`;
     }
