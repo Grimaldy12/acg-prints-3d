@@ -54,6 +54,7 @@ router.post('/', async (req, res) => {
       customer_id,
       customer_name,
       customer_phone,
+      customer_cedula,
       items,
       description = '',
       total_price = 0,
@@ -69,6 +70,7 @@ router.post('/', async (req, res) => {
     // Resolve customer details if customer_id provided
     let finalCustomerName = customer_name || 'Sin cliente';
     let finalCustomerPhone = customer_phone || '';
+    let finalCustomerCedula = customer_cedula || '';
 
     if (customer_id) {
       const customerDoc = await db.collection('customers').doc(customer_id).get();
@@ -76,6 +78,7 @@ router.post('/', async (req, res) => {
         const custData = customerDoc.data();
         finalCustomerName = custData.name;
         finalCustomerPhone = custData.phone || finalCustomerPhone;
+        finalCustomerCedula = custData.cedula || finalCustomerCedula;
       }
     }
 
@@ -112,6 +115,7 @@ router.post('/', async (req, res) => {
       customer_id: customer_id || null,
       customer_name: finalCustomerName,
       customer_phone: finalCustomerPhone,
+      customer_cedula: finalCustomerCedula,
       items: resolvedItems,
       description: description || '',
       total_price: Number(total_price) || 0,
@@ -164,6 +168,7 @@ router.put('/:id', async (req, res) => {
       customer_id = existing.customer_id,
       customer_name = existing.customer_name,
       customer_phone = existing.customer_phone,
+      customer_cedula = existing.customer_cedula,
       items,
       description = existing.description,
       total_price = existing.total_price,
@@ -174,6 +179,7 @@ router.put('/:id', async (req, res) => {
 
     let finalCustomerName = customer_name;
     let finalCustomerPhone = customer_phone;
+    let finalCustomerCedula = customer_cedula;
 
     if (customer_id && customer_id !== existing.customer_id) {
       const customerDoc = await db.collection('customers').doc(customer_id).get();
@@ -181,6 +187,7 @@ router.put('/:id', async (req, res) => {
         const custData = customerDoc.data();
         finalCustomerName = custData.name;
         finalCustomerPhone = custData.phone || finalCustomerPhone;
+        finalCustomerCedula = custData.cedula || finalCustomerCedula;
       }
     }
 
@@ -207,6 +214,7 @@ router.put('/:id', async (req, res) => {
       customer_id: customer_id || null,
       customer_name: finalCustomerName,
       customer_phone: finalCustomerPhone,
+      customer_cedula: finalCustomerCedula,
       items: resolvedItems,
       description: description || '',
       total_price: Number(total_price) || 0,

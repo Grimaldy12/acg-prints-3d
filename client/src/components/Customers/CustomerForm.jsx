@@ -5,6 +5,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [cedula, setCedula] = useState('');
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -16,6 +17,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
       setInstagram(customer.instagram || '');
       setEmail(customer.email || '');
       setNotes(customer.notes || '');
+      setCedula(customer.cedula || '');
     }
   }, [customer]);
 
@@ -30,7 +32,8 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         phone: phone.trim(),
         instagram: instagram.trim(),
         email: email.trim(),
-        notes: notes.trim()
+        notes: notes.trim(),
+        cedula: cedula.trim()
       });
     } finally {
       setSaving(false);
@@ -73,6 +76,23 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         </div>
 
         <div className="form-group">
+          <label className="form-label">Cédula de Identidad / RIF</label>
+          <div style={{ position: 'relative' }}>
+            <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <input
+              type="text"
+              className="form-input"
+              style={{ paddingLeft: '36px' }}
+              value={cedula}
+              onChange={e => setCedula(e.target.value)}
+              placeholder="Ej. V-12345678 o 12.345.678"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
           <label className="form-label">Instagram</label>
           <div style={{ position: 'relative' }}>
             <Instagram size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
@@ -86,20 +106,20 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
             />
           </div>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label className="form-label">Correo Electrónico</label>
-        <div style={{ position: 'relative' }}>
-          <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
-          <input
-            type="email"
-            className="form-input"
-            style={{ paddingLeft: '36px' }}
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="Ej. juan@gmail.com"
-          />
+        <div className="form-group">
+          <label className="form-label">Correo Electrónico</label>
+          <div style={{ position: 'relative' }}>
+            <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <input
+              type="email"
+              className="form-input"
+              style={{ paddingLeft: '36px' }}
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Ej. juan@gmail.com"
+            />
+          </div>
         </div>
       </div>
 

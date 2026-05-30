@@ -96,7 +96,7 @@ router.get('/:id', async (req, res) => {
 // ──────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { name, phone, instagram, email, notes } = req.body;
+    const { name, phone, instagram, email, notes, cedula } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'El campo name es obligatorio.' });
@@ -108,6 +108,7 @@ router.post('/', async (req, res) => {
       instagram: instagram || '',
       email: email || '',
       notes: notes || '',
+      cedula: cedula || '',
       created_at: new Date().toISOString()
     };
 
@@ -139,6 +140,7 @@ router.put('/:id', async (req, res) => {
       instagram = existing.instagram,
       email = existing.email,
       notes = existing.notes,
+      cedula = existing.cedula,
     } = req.body;
 
     const updatedCustomer = {
@@ -146,7 +148,8 @@ router.put('/:id', async (req, res) => {
       phone: phone || '',
       instagram: instagram || '',
       email: email || '',
-      notes: notes || ''
+      notes: notes || '',
+      cedula: cedula || ''
     };
 
     await docRef.update(updatedCustomer);

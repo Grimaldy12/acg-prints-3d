@@ -210,6 +210,11 @@ export default function CustomersPage() {
                               <Phone size={12} style={{ color: 'var(--color-text-muted)' }} /> {c.phone}
                             </span>
                           )}
+                          {c.cedula && (
+                            <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-text-muted)', fontWeight: 600 }}>C.I.</span> {c.cedula}
+                            </span>
+                          )}
                           {c.instagram && (
                             <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <Instagram size={12} style={{ color: 'var(--color-text-muted)' }} /> {c.instagram}
@@ -220,7 +225,7 @@ export default function CustomersPage() {
                               <Mail size={12} style={{ color: 'var(--color-text-muted)' }} /> {c.email}
                             </span>
                           )}
-                          {!c.phone && !c.email && !c.instagram && <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>—</span>}
+                          {!c.phone && !c.email && !c.instagram && !c.cedula && <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>—</span>}
                         </div>
                       </td>
                       <td style={{ padding: '16px 20px' }}>

@@ -60,6 +60,7 @@ export default function OrdersPage() {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerCedula, setCustomerCedula] = useState('');
   const [description, setDescription] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
   const [deposit, setDeposit] = useState(0);
@@ -119,6 +120,7 @@ export default function OrdersPage() {
     setSelectedCustomerId('');
     setCustomerName('');
     setCustomerPhone('');
+    setCustomerCedula('');
     setDescription('');
     setTotalPrice(0);
     setDeposit(0);
@@ -134,6 +136,7 @@ export default function OrdersPage() {
     setSelectedCustomerId(order.customer_id || '');
     setCustomerName(order.customer_name || '');
     setCustomerPhone(order.customer_phone || '');
+    setCustomerCedula(order.customer_cedula || '');
     setDescription(order.description || '');
     setTotalPrice(order.total_price || 0);
     setDeposit(order.deposit || 0);
@@ -164,6 +167,7 @@ export default function OrdersPage() {
       customer_id: selectedCustomerId || null,
       customer_name: customerName,
       customer_phone: customerPhone,
+      customer_cedula: customerCedula,
       description,
       total_price: Number(totalPrice) || 0,
       deposit: Number(deposit) || 0,
@@ -214,10 +218,12 @@ export default function OrdersPage() {
       if (found) {
         setCustomerName(found.name);
         setCustomerPhone(found.phone || '');
+        setCustomerCedula(found.cedula || '');
       }
     } else {
       setCustomerName('');
       setCustomerPhone('');
+      setCustomerCedula('');
     }
   };
 
@@ -303,7 +309,7 @@ export default function OrdersPage() {
     const balance = order.total_price - order.deposit;
 
     if (type === 'registered') {
-      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}". \n\n💰 *Total:* ${formatCurrency(order.total_price)}\n💵 *Adelanto:* ${formatCurrency(order.deposit)}\n💳 *Saldo Pendiente:* ${formatCurrency(balance)}\n\n¡Te avisaremos cuando esté listo en nuestras impresoras! 🛠️`;
+      message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🚀. Queremos confirmarte que hemos registrado tu pedido: "${order.description || 'Detalles en notas'}". \n\n💰 *Total:* ${formatCurrency(order.total_price)}\n💵 *Adelanto:* ${formatCurrency(order.deposit)}\n💳 *Saldo Pendiente:* ${formatCurrency(balance)}\n\n*Por favor, ayúdanos a confirmar tus datos de facturación y entrega:*\n📝 *Nombre completo:* ${name}\n🪪 *Cédula de Identidad:* ${order.customer_cedula || '✍️ (Por favor, respóndenos con tu número de cédula)'}\n📞 *Número de contacto:* ${order.customer_phone || '✍️ (Por favor, respóndenos con tu número)'}\n\n¡Te avisaremos apenas tu pedido esté listo en nuestras impresoras 3D! 🛠️`;
     } else if (type === 'finished') {
       message = `Hola ${name}, te escribimos de *ACG PRINTS 3D* 🎉. ¡Tu pedido está listo y terminado! Puedes pasar a retirarlo cuando gustes.\n\n💳 *Saldo Pendiente a abonar:* ${formatCurrency(balance)}\n\n¡Gracias por tu confianza! 🌟`;
     }
@@ -679,15 +685,26 @@ export default function OrdersPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Fecha Límite de Entrega</label>
+                <label className="form-label">Cédula de Identidad / RIF</label>
                 <input
-                  type="date"
+                  type="text"
                   className="form-input"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                  required
+                  placeholder="Ej: V-12345678 o 12.345.678"
+                  value={customerCedula}
+                  onChange={(e) => setCustomerCedula(e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Fecha Límite de Entrega</label>
+              <input
+                type="date"
+                className="form-input"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                required
+              />
             </div>
 
             {/* Description / Custom parameters */}
