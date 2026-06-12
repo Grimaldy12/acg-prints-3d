@@ -83,26 +83,40 @@ export function generateReceiptPDF(data, type = 'sale') {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
+    html, body {
       font-family:'Inter',system-ui,sans-serif;
-      background:#0a0c12;
+      background:#ffffff;
       color:#e6eaf5;
       print-color-adjust:exact;
       -webkit-print-color-adjust:exact;
     }
     .page {
       width:148mm;
-      min-height:210mm;
       margin:0 auto;
       background:#0a0c12;
+      overflow:hidden;
+    }
+    /* Eliminar headers/footers del browser al imprimir */
+    @page {
+      margin: 0;
+      size: A5 portrait;
     }
     @media print {
-      html,body { background:#0a0c12 !important; margin:0; padding:0; }
-      .page { width:100%; margin:0; }
+      html, body {
+        background:#ffffff !important;
+        margin:0 !important;
+        padding:0 !important;
+        width:148mm !important;
+        height:auto !important;
+      }
+      .page {
+        width:148mm !important;
+        margin:0 !important;
+      }
       .no-print { display:none !important; }
     }
     @media screen {
-      body { padding: 20px 0; }
+      body { padding:20px 0; background:#1a1a2e; }
       .print-bar {
         width:148mm;
         margin:0 auto 12px;
@@ -209,6 +223,4 @@ export function generateReceiptPDF(data, type = 'sale') {
   win.document.write(html);
   win.document.close();
   win.focus();
-  // Pequeño delay para que cargue la fuente de Google
-  setTimeout(() => { win.print(); }, 900);
 }
