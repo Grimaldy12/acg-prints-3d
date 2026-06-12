@@ -263,8 +263,9 @@ export default function ProductForm({ product, onSave, onCancel }) {
                   <input
                     type="number" className="form-input" style={{ paddingLeft: 22 }}
                     placeholder="0.00" min="0" step="0.01"
-                    value={extra.cost}
-                    onChange={e => updateExtra(idx, 'cost', parseFloat(e.target.value) || 0)}
+                    value={extra.cost === 0 ? '' : extra.cost}
+                    onChange={e => updateExtra(idx, 'cost', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                    onFocus={e => e.target.select()}
                   />
                 </div>
                 <button type="button" onClick={() => removeExtra(idx)}
