@@ -14,6 +14,7 @@ const navItems = [
   { to: '/productos', icon: Package,         label: 'Productos' },
   { to: '/clientes',  icon: Users,           label: 'Clientes' },
   { to: '/gastos',    icon: Receipt,         label: 'Gastos' },
+  { to: '/reportes', icon: FileSpreadsheet,  label: 'Reportes' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
