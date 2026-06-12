@@ -1,23 +1,14 @@
 /* ============================================================
-   ACG PRINTS 3D — Generador de recibos PDF
-   Tema: oscuro con azul logo, sin glassmorphism.
+   ACG PRINTS 3D — Generador de recibos
+   Genera HTML estilizado y abre el diálogo de impresión/PDF.
+   Soporta todos los caracteres, sin dependencias de fuentes.
    ============================================================ */
-import { jsPDF } from 'jspdf';
 
 const BUSINESS = {
   name:      'ACG PRINTS 3D',
-  tagline:   'Disenos Personalizados - Impresion 3D',
+  tagline:   'Diseños Personalizados · Impresión 3D',
   phone:     '6219-9471',
   instagram: '@acgprints3d',
-  // Paleta del logo
-  dark:    [10,  12,  18],   // fondo oscuro del logo
-  blue:    [41, 121, 255],   // azul logo
-  silver:  [200, 205, 215],  // plateado logo
-  white:   [255, 255, 255],
-  muted:   [140, 148, 160],
-  line:    [45,  52,  65],
-  rowAlt:  [18,  22,  32],
-  ink:     [230, 235, 245],
 };
 
 function fmt(val) {
@@ -34,209 +25,183 @@ function fmtDate(str) {
 }
 
 function receiptNum(data) {
-  if (data.receipt_number) return `#${data.receipt_number}`;
+  if (data.receipt_number) return `#${String(data.receipt_number).padStart(4,'0')}`;
   if (data.id) return `#${String(data.id).slice(-6).toUpperCase()}`;
   return '#---';
 }
 
 export function generateReceiptPDF(data, type = 'sale') {
-  const doc = new jsPDF({ unit: 'mm', format: 'a5', orientation: 'portrait' });
-  const W = doc.internal.pageSize.getWidth();
-  const H = doc.internal.pageSize.getHeight();
-  const M = 14;
-  let y = 0;
-
-  const B = BUSINESS;
-
-  // ── Fondo total oscuro ────────────────────────────────────
-  doc.setFillColor(...B.dark);
-  doc.rect(0, 0, W, H, 'F');
-
-  // ── Encabezado: banda azul oscura ─────────────────────────
-  doc.setFillColor(18, 28, 55);
-  doc.rect(0, 0, W, 30, 'F');
-
-  // Borde inferior azul brillante
-  doc.setDrawColor(...B.blue);
-  doc.setLineWidth(0.8);
-  doc.line(0, 30, W, 30);
-
-  // Acento azul izquierdo (barra vertical)
-  doc.setFillColor(...B.blue);
-  doc.rect(0, 0, 4, 30, 'F');
-
-  // Nombre negocio
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(...B.white);
-  doc.text('ACG PRINTS 3D', M + 4, 12);
-
-  // Tagline
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(...B.silver);
-  doc.text(B.tagline, M + 4, 19);
-
-  // Tipo doc (derecha)
-  const label = type === 'order' ? 'PEDIDO' : 'RECIBO';
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...B.blue);
-  doc.text(label, W - M, 12, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(...B.silver);
-  doc.text(receiptNum(data), W - M, 19, { align: 'right' });
-
-  y = 38;
-
-  // ── Contacto ──────────────────────────────────────────────
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...B.muted);
-  doc.text(`Tel: ${B.phone}   Instagram: ${B.instagram}`, M, y);
-  y += 7;
-
-  // ── Separador ─────────────────────────────────────────────
-  doc.setDrawColor(...B.line);
-  doc.setLineWidth(0.3);
-  doc.line(M, y, W - M, y);
-  y += 7;
-
-  // ── Cliente + Fecha ───────────────────────────────────────
+  const items    = data.items || [];
   const clientName = data.customer_name || data.customer?.name || 'Sin cliente';
-  const dateStr    = fmtDate(data.created_at || data.date);
+  const dateStr  = fmtDate(data.created_at || data.date);
+  const num      = receiptNum(data);
+  const label    = type === 'order' ? 'PEDIDO' : 'RECIBO';
+  const hasDeposit = type === 'order' && data.deposit && Number(data.deposit) > 0;
+  const remaining  = hasDeposit ? Math.max(0, Number(data.total||0) - Number(data.deposit||0)) : 0;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(...B.muted);
-  doc.text('CLIENTE', M, y);
-  doc.text('FECHA', W - M, y, { align: 'right' });
-
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...B.ink);
-  doc.text(clientName, M, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(dateStr, W - M, y, { align: 'right' });
-  y += 8;
-
-  // Notas
-  if (data.notes) {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...B.muted);
-    const lines = doc.splitTextToSize(`Nota: ${data.notes}`, W - M * 2);
-    doc.text(lines, M, y);
-    y += lines.length * 4 + 2;
-  }
-
-  // ── Encabezado tabla ──────────────────────────────────────
-  doc.setFillColor(18, 28, 55);
-  doc.rect(M, y, W - M * 2, 7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(...B.blue);
-  doc.text('PRODUCTO / DESCRIPCION', M + 2, y + 4.8);
-  doc.text('CANT',     W - M - 32, y + 4.8, { align: 'right' });
-  doc.text('P.UNIT',   W - M - 14, y + 4.8, { align: 'right' });
-  doc.text('SUBTOTAL', W - M,      y + 4.8, { align: 'right' });
-  y += 9;
-
-  // ── Ítems ─────────────────────────────────────────────────
-  const items = data.items || [];
-  doc.setDrawColor(...B.line);
-  doc.setLineWidth(0.2);
-
-  items.forEach((item, i) => {
+  const itemsHTML = items.map((item, i) => {
     const name     = item.product_name || item.name || 'Producto';
-    const qty      = Number(item.quantity || item.qty || 1);
+    const qty      = Number(item.quantity || 1);
     const price    = Number(item.unit_price || item.price || 0);
     const subtotal = Number(item.subtotal || qty * price);
+    return `
+      <tr style="background:${i%2===0?'#12161f':'transparent'}">
+        <td style="padding:8px 10px;color:#e6eaf5;font-size:12px">${name}</td>
+        <td style="padding:8px 10px;color:#8c94a0;font-size:12px;text-align:center">${qty}</td>
+        <td style="padding:8px 10px;color:#8c94a0;font-size:12px;text-align:right">${fmt(price)}</td>
+        <td style="padding:8px 10px;color:#e6eaf5;font-size:12px;text-align:right;font-weight:600">${fmt(subtotal)}</td>
+      </tr>`;
+  }).join('');
 
-    if (i % 2 === 0) {
-      doc.setFillColor(...B.rowAlt);
-      doc.rect(M, y - 1, W - M * 2, 7, 'F');
+  const discountRow = data.discount && Number(data.discount) > 0 ? `
+    <tr>
+      <td colspan="3" style="padding:6px 10px;color:#8c94a0;font-size:11px;text-align:right">Descuento</td>
+      <td style="padding:6px 10px;color:#8c94a0;font-size:11px;text-align:right">-${fmt(data.discount)}</td>
+    </tr>` : '';
+
+  const depositRows = hasDeposit ? `
+    <tr>
+      <td colspan="3" style="padding:6px 10px;color:#8c94a0;font-size:11px;text-align:right">Adelanto recibido</td>
+      <td style="padding:6px 10px;color:#8c94a0;font-size:11px;text-align:right">-${fmt(data.deposit)}</td>
+    </tr>
+    <tr>
+      <td colspan="3" style="padding:6px 10px;color:#8c94a0;font-size:11px;text-align:right;font-weight:700">Saldo pendiente</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:700;color:${remaining>0?'#e05c50':'#4caf78'}">${fmt(remaining)}</td>
+    </tr>` : '';
+
+  const notesHTML = data.notes ? `
+    <p style="margin:0 0 12px;font-size:11px;color:#8c94a0;font-style:italic">
+      Nota: ${data.notes}
+    </p>` : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recibo ${num} - ACG PRINTS 3D</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Inter',system-ui,sans-serif;
+      background:#0a0c12;
+      color:#e6eaf5;
+      print-color-adjust:exact;
+      -webkit-print-color-adjust:exact;
     }
+    .page {
+      width:148mm;
+      min-height:210mm;
+      margin:0 auto;
+      background:#0a0c12;
+      position:relative;
+    }
+    @media print {
+      html,body { background:#0a0c12 !important; }
+      .page { width:100%; margin:0; box-shadow:none; }
+      .no-print { display:none; }
+    }
+    /* Botón de descarga (solo en pantalla) */
+    .print-btn {
+      display:block;
+      margin:16px auto;
+      padding:10px 28px;
+      background:#2979ff;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    .print-btn:hover { background:#1565c0; }
+  </style>
+</head>
+<body>
+  <button class="print-btn no-print" onclick="window.print()">⬇ Descargar / Imprimir PDF</button>
+  <div class="page">
+    <!-- Encabezado -->
+    <div style="background:#12183a;border-left:5px solid #2979ff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:17px;font-weight:800;color:#ffffff;letter-spacing:-0.3px">ACG PRINTS 3D</div>
+        <div style="font-size:9px;color:#8c9bc0;margin-top:3px;font-weight:500">${BUSINESS.tagline}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:800;color:#2979ff;letter-spacing:1px">${label}</div>
+        <div style="font-size:9px;color:#8c9bc0;margin-top:3px;font-weight:600">${num}</div>
+      </div>
+    </div>
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...B.ink);
-    const nameLines = doc.splitTextToSize(name, W - M * 2 - 52);
-    doc.text(nameLines, M + 2, y + 4);
+    <!-- Borde azul -->
+    <div style="height:2px;background:linear-gradient(90deg,#2979ff,#1a237e)"></div>
 
-    doc.setTextColor(...B.muted);
-    doc.text(String(qty),        W - M - 32, y + 4, { align: 'right' });
-    doc.text(fmt(price),         W - M - 14, y + 4, { align: 'right' });
-    doc.setTextColor(...B.ink);
-    doc.text(fmt(subtotal),      W - M,      y + 4, { align: 'right' });
+    <!-- Contacto -->
+    <div style="padding:10px 20px;border-bottom:1px solid #1e2535">
+      <span style="font-size:10px;color:#8c94a0">Tel: ${BUSINESS.phone} &nbsp;·&nbsp; Instagram: ${BUSINESS.instagram}</span>
+    </div>
 
-    y += Math.max(nameLines.length * 5, 7);
-    doc.setDrawColor(...B.line);
-    doc.line(M, y, W - M, y);
-    y += 1;
-  });
+    <!-- Cliente + Fecha -->
+    <div style="padding:14px 20px;display:flex;justify-content:space-between;border-bottom:1px solid #1e2535">
+      <div>
+        <div style="font-size:9px;font-weight:700;color:#8c94a0;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Cliente</div>
+        <div style="font-size:13px;font-weight:700;color:#ffffff">${clientName}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:9px;font-weight:700;color:#8c94a0;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Fecha</div>
+        <div style="font-size:12px;color:#e6eaf5">${dateStr}</div>
+      </div>
+    </div>
 
-  y += 3;
+    <!-- Notas -->
+    ${notesHTML ? `<div style="padding:8px 20px 0;border-bottom:1px solid #1e2535">${notesHTML}</div>` : ''}
 
-  // ── Descuento ─────────────────────────────────────────────
-  if (data.discount && Number(data.discount) > 0) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...B.muted);
-    doc.text('Descuento', W - M - 28, y, { align: 'right' });
-    doc.text(`-${fmt(data.discount)}`, W - M, y, { align: 'right' });
-    y += 6;
+    <!-- Tabla -->
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#12183a">
+          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:left">Producto / Descripción</th>
+          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:center">Cant</th>
+          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">P.Unit</th>
+          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>${itemsHTML}</tbody>
+      <tfoot>
+        ${discountRow}
+        ${depositRows}
+        <tr>
+          <td colspan="4" style="padding:0">
+            <div style="background:#2979ff;padding:10px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:1px">TOTAL</span>
+              <span style="font-size:16px;font-weight:800;color:#fff">${fmt(data.total)}</span>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Pie -->
+    <div style="margin-top:auto;padding:14px 20px;text-align:center;border-top:1px solid #1e2535">
+      <div style="font-size:10px;color:#8c94a0">¡Gracias por tu compra! · acgprints3d</div>
+      <div style="font-size:9px;color:#4a5060;margin-top:3px">Generado el ${new Date().toLocaleDateString('es-PA')}</div>
+    </div>
+    <div style="height:5px;background:linear-gradient(90deg,#2979ff,#1a237e)"></div>
+  </div>
+  <button class="print-btn no-print" onclick="window.print()" style="margin-bottom:24px">⬇ Descargar / Imprimir PDF</button>
+</body>
+</html>`;
+
+  // Abrir en nueva pestaña y activar diálogo de impresión
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Por favor permite ventanas emergentes para descargar el recibo.');
+    return;
   }
-
-  // ── Adelanto (pedidos) ────────────────────────────────────
-  if (type === 'order' && data.deposit && Number(data.deposit) > 0) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...B.muted);
-    doc.text('Adelanto recibido', W - M - 28, y, { align: 'right' });
-    doc.text(`-${fmt(data.deposit)}`, W - M, y, { align: 'right' });
-    y += 6;
-
-    const remaining = Math.max(0, Number(data.total || 0) - Number(data.deposit || 0));
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(...B.muted);
-    doc.text('Saldo pendiente', W - M - 28, y, { align: 'right' });
-    doc.setTextColor(remaining > 0 ? 220 : 80, remaining > 0 ? 80 : 180, remaining > 0 ? 60 : 100);
-    doc.text(fmt(remaining), W - M, y, { align: 'right' });
-    y += 6;
-  }
-
-  // ── Total ─────────────────────────────────────────────────
-  // Fondo azul para el total
-  doc.setFillColor(...B.blue);
-  doc.rect(M, y, W - M * 2, 11, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...B.white);
-  doc.text('TOTAL', M + 4, y + 7.2);
-  doc.setFontSize(13);
-  doc.text(fmt(data.total), W - M - 2, y + 7.5, { align: 'right' });
-  y += 17;
-
-  // ── Pie ───────────────────────────────────────────────────
-  doc.setDrawColor(...B.line);
-  doc.setLineWidth(0.3);
-  doc.line(M, H - 16, W - M, H - 16);
-
-  // Acento azul en el pie
-  doc.setFillColor(...B.blue);
-  doc.rect(0, H - 6, W, 6, 'F');
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(...B.muted);
-  doc.text('Gracias por tu compra! - acgprints3d', W / 2, H - 10, { align: 'center' });
-
-  // ── Guardar ───────────────────────────────────────────────
-  const num = data.receipt_number || String(data.id || '').slice(-6).toUpperCase();
-  doc.save(`recibo_${type === 'order' ? 'pedido' : 'venta'}_${num}.pdf`);
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  // Pequeño delay para que cargue la fuente de Google
+  setTimeout(() => { win.print(); }, 900);
 }
