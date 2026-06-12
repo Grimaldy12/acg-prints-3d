@@ -161,7 +161,7 @@ export function generateReceiptPDF(data, type = 'sale') {
     const subtotal = Number(item.subtotal || qty * price);
 
     if (i % 2 === 0) {
-      doc.setFillColor(...B.rowAlt);
+      doc.setFillColor(245, 246, 250);
       doc.rect(M, y - 1, W - M * 2, 8, 'F');
     }
 
