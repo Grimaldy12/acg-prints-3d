@@ -174,7 +174,7 @@ export default function ProductsPage() {
         }}>
           {filteredProducts.map(p => {
             const margin = p.sale_price > 0 
-              ? (((p.sale_price - p.material_cost) / p.sale_price) * 100).toFixed(0)
+              ? (((p.sale_price - (p.total_cost || p.material_cost)) / p.sale_price) * 100).toFixed(0)
               : 0;
             return (
               <div key={p.id} className="product-card card" style={{
@@ -222,16 +222,21 @@ export default function ProductsPage() {
                 <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '16px', marginBottom: '16px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                     <div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>Costo Material</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>Costo Producción</span>
                       <strong style={{ fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>
-                        {formatCurrency(p.material_cost)}
+                        {formatCurrency(p.total_cost || p.material_cost)}
                         {p.weight_g > 0 && <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: '400', marginLeft: '4px' }}>({p.weight_g}g)</span>}
                       </strong>
+                      {p.extras && p.extras.length > 0 && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'block' }}>
+                          +{p.extras.length} extra{p.extras.length > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block' }}>Margen (Ganancia)</span>
                       <strong style={{ fontSize: '0.95rem', color: 'var(--color-success)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span>+{formatCurrency(p.sale_price - p.material_cost)}</span>
+                        <span>+{formatCurrency(p.sale_price - (p.total_cost || p.material_cost))}</span>
                         <span style={{ fontSize: '0.75rem', fontWeight: '500', color: Number(margin) >= 50 ? 'var(--color-success)' : 'var(--color-warning)' }}>({margin}% margen)</span>
                       </strong>
                     </div>
