@@ -1,63 +1,78 @@
-/* ============================================================
-   PrintFlow 3D — Sales Page Component
-   ============================================================
-   Full CRUD for sales with filtering, pagination, and modals.
-   ============================================================ */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  ShoppingCart,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
+  Plus, Search, Edit2, Trash2, ShoppingCart,
+  ChevronLeft, ChevronRight, TrendingUp, DollarSign,
+  Clock, CheckCircle, BarChart2,
 } from 'lucide-react';
 import { api } from '../../utils/api.js';
 import { useToast } from '../../App.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
-import { SALE_STATUSES, STATUS_COLORS, getStatusLabel } from '../../utils/constants.js';
+import { SALE_STATUSES, getStatusLabel } from '../../utils/constants.js';
 import Modal from '../UI/Modal.jsx';
 import ConfirmDialog from '../UI/ConfirmDialog.jsx';
 import SaleForm from './SaleForm.jsx';
 
 const PAGE_SIZE = 10;
 
+/* ── Tarjeta de resumen histórico ───────────────────────────── */
+function SummaryCard({ icon: Icon, label, value, color, sub }) {
+  return (
+    <div className="stat-card" style={{ '--card-accent': color }}>
+      <div className="stat-icon" style={{ background: `${color}1A`, color }}>
+        <Icon size={20} />
+      </div>
+      <div className="stat-info">
+        <span className="stat-label">{label}</span>
+        <span className="stat-value">{value}</span>
+        {sub && <span className="stat-trend" style={{ color: 'var(--muted)' }}>{sub}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function SalesPage() {
   const toast = useToast();
 
-  // Data state
-  const [sales, setSales] = useState([]);
+  const [sales, setSales]         = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [summary, setSummary]     = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
-  // Filters
   const [statusFilter, setStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [search, setSearch]             = useState('');
+  const [dateFrom, setDateFrom]         = useState('');
+  const [dateTo, setDateTo]             = useState('');
+  const [page, setPage]                 = useState(1);
 
-  // Pagination
-  const [page, setPage] = useState(1);
-
-  // Modals
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingSale, setEditingSale] = useState(null);
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [editingSale, setEditingSale]   = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  // Fetch sales
+  /* ── Fetch resumen histórico ──────────────────────────────── */
+  const fetchSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const res = await api.get('/api/sales/summary');
+      setSummary(res?.data || res);
+    } catch (_) {
+      // silencioso: la sección simplemente no aparece
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
+  /* ── Fetch ventas ─────────────────────────────────────────── */
   const fetchSales = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.append('status', statusFilter);
-      if (search) params.append('search', search);
-      if (dateFrom) params.append('dateFrom', dateFrom);
-      if (dateTo) params.append('dateTo', dateTo);
-      const query = params.toString();
-      const res = await api.get(`/api/sales${query ? `?${query}` : ''}`);
+      if (search)       params.append('search', search);
+      if (dateFrom)     params.append('from', dateFrom);
+      if (dateTo)       params.append('to', dateTo);
+      const q = params.toString();
+      const res = await api.get(`/api/sales${q ? `?${q}` : ''}`);
       setSales(Array.isArray(res) ? res : res?.data || res?.sales || []);
     } catch (err) {
       toast.error('Error al cargar ventas');
@@ -66,44 +81,30 @@ export default function SalesPage() {
     }
   }, [statusFilter, search, dateFrom, dateTo]);
 
-  // Fetch customers & products for the form
   const fetchFormData = useCallback(async () => {
     try {
       const [cRes, pRes] = await Promise.allSettled([
         api.get('/api/customers'),
         api.get('/api/products'),
       ]);
-      if (cRes.status === 'fulfilled') {
-        setCustomers(Array.isArray(cRes.value) ? cRes.value : cRes.value?.data || []);
-      }
-      if (pRes.status === 'fulfilled') {
-        setProducts(Array.isArray(pRes.value) ? pRes.value : pRes.value?.data || []);
-      }
-    } catch (_) { /* ignore */ }
+      if (cRes.status === 'fulfilled') setCustomers(Array.isArray(cRes.value) ? cRes.value : cRes.value?.data || []);
+      if (pRes.status === 'fulfilled') setProducts(Array.isArray(pRes.value) ? pRes.value : pRes.value?.data || []);
+    } catch (_) {}
   }, []);
 
   useEffect(() => {
+    fetchSummary();
     fetchSales();
     fetchFormData();
-  }, [fetchSales, fetchFormData]);
+  }, [fetchSummary, fetchSales, fetchFormData]);
 
-  // Paginated data
-  const totalPages = Math.max(1, Math.ceil(sales.length / PAGE_SIZE));
-  const paginatedSales = sales.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Reset page when filters change
   useEffect(() => { setPage(1); }, [statusFilter, search, dateFrom, dateTo]);
 
-  // Handlers
-  const handleCreate = () => {
-    setEditingSale(null);
-    setModalOpen(true);
-  };
+  const totalPages   = Math.max(1, Math.ceil(sales.length / PAGE_SIZE));
+  const paginatedSales = sales.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleEdit = (sale) => {
-    setEditingSale(sale);
-    setModalOpen(true);
-  };
+  const handleCreate = () => { setEditingSale(null); setModalOpen(true); };
+  const handleEdit   = (sale) => { setEditingSale(sale); setModalOpen(true); };
 
   const handleSave = async (saleData) => {
     try {
@@ -117,6 +118,7 @@ export default function SalesPage() {
       setModalOpen(false);
       setEditingSale(null);
       fetchSales();
+      fetchSummary(); // refrescar resumen tras nueva venta
     } catch (err) {
       toast.error(err.message || 'Error al guardar la venta');
       throw err;
@@ -130,6 +132,7 @@ export default function SalesPage() {
       toast.success('Venta eliminada');
       setDeleteConfirm(null);
       fetchSales();
+      fetchSummary();
     } catch (err) {
       toast.error(err.message || 'Error al eliminar la venta');
     }
@@ -144,12 +147,63 @@ export default function SalesPage() {
           <p>Gestiona todas tus ventas y pedidos</p>
         </div>
         <button className="btn btn-primary" onClick={handleCreate}>
-          <Plus size={18} />
-          Nueva Venta
+          <Plus size={18} /> Nueva Venta
         </button>
       </div>
 
-      {/* Filter Bar */}
+      {/* ── Resumen histórico ──────────────────────────────────── */}
+      {!summaryLoading && summary && (
+        <div style={{ marginBottom: '28px' }}>
+          <h2 style={{
+            fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)',
+            fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+            letterSpacing: '0.1em', marginBottom: '12px',
+            display: 'flex', alignItems: 'center', gap: '8px',
+          }}>
+            <BarChart2 size={14} style={{ color: 'var(--accent)' }} />
+            Histórico total de ventas
+          </h2>
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <SummaryCard
+              icon={TrendingUp}
+              label="Total recaudado"
+              value={formatCurrency(summary.total_recaudado)}
+              color="#E2570F"
+              sub={`${summary.total_ventas} ventas en total`}
+            />
+            <SummaryCard
+              icon={CheckCircle}
+              label="Cobrado (pagado + entregado)"
+              value={formatCurrency(summary.total_pagado)}
+              color="#2E7D4F"
+              sub={`${summary.total_entregado} entregadas`}
+            />
+            <SummaryCard
+              icon={Clock}
+              label="Por cobrar"
+              value={formatCurrency(summary.total_pendiente)}
+              color="#A66B06"
+              sub="Ventas pendientes"
+            />
+            <SummaryCard
+              icon={DollarSign}
+              label="Ticket promedio"
+              value={formatCurrency(summary.ticket_promedio)}
+              color="#6D4BBE"
+              sub="Excluye canceladas"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Skeleton del resumen si está cargando */}
+      {summaryLoading && (
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '28px' }}>
+          {[0,1,2,3].map(i => <div key={i} className="skeleton skeleton-card" />)}
+        </div>
+      )}
+
+      {/* ── Filtros ────────────────────────────────────────────── */}
       <div className="filter-bar">
         <div className="search-input-wrap">
           <Search />
@@ -171,32 +225,16 @@ export default function SalesPage() {
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
-        <input
-          type="date"
-          className="form-input"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          placeholder="Desde"
-          style={{ maxWidth: 170 }}
-        />
-        <input
-          type="date"
-          className="form-input"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          placeholder="Hasta"
-          style={{ maxWidth: 170 }}
-        />
+        <input type="date" className="form-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ maxWidth: 170 }} />
+        <input type="date" className="form-input" value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   style={{ maxWidth: 170 }} />
       </div>
 
-      {/* Table or Empty */}
+      {/* ── Tabla ─────────────────────────────────────────────── */}
       {loading ? (
         <div className="loading-spinner"><div className="spinner" /></div>
       ) : sales.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">
-            <ShoppingCart size={36} />
-          </div>
+          <div className="empty-state-icon"><ShoppingCart size={36} /></div>
           <h3>Sin ventas</h3>
           <p>Aún no tienes ventas registradas. Crea tu primera venta para comenzar.</p>
           <button className="btn btn-primary" onClick={handleCreate} style={{ marginTop: 16 }}>
@@ -229,17 +267,13 @@ export default function SalesPage() {
 
                   return (
                     <tr key={saleId}>
-                      <td style={{ color: 'var(--text-muted)' }}>
-                        {(page - 1) * PAGE_SIZE + idx + 1}
-                      </td>
-                      <td>{formatDate(sale.date || sale.createdAt || sale.created_at)}</td>
-                      <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                      <td style={{ color: 'var(--muted)' }}>{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                      <td className="mono">{formatDate(sale.date || sale.createdAt || sale.created_at)}</td>
+                      <td style={{ color: 'var(--ink)', fontWeight: 500 }}>
                         {sale.customer?.name || sale.customerName || sale.customer_name || '—'}
                       </td>
                       <td>{productDisplay}</td>
-                      <td style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>
-                        {formatCurrency(sale.total)}
-                      </td>
+                      <td className="money">{formatCurrency(sale.total)}</td>
                       <td>
                         <span className={`badge badge-${sale.status}`}>
                           <span className="badge-dot" />
@@ -248,18 +282,10 @@ export default function SalesPage() {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button
-                            className="action-btn edit"
-                            title="Editar"
-                            onClick={() => handleEdit(sale)}
-                          >
+                          <button className="action-btn edit" title="Editar" onClick={() => handleEdit(sale)}>
                             <Edit2 size={16} />
                           </button>
-                          <button
-                            className="action-btn delete"
-                            title="Eliminar"
-                            onClick={() => setDeleteConfirm(sale)}
-                          >
+                          <button className="action-btn delete" title="Eliminar" onClick={() => setDeleteConfirm(sale)}>
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -271,30 +297,42 @@ export default function SalesPage() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Totales de la vista filtrada */}
+          {sales.length > 0 && (
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+              gap: '24px', padding: '12px 16px',
+              borderTop: '1px solid var(--line)',
+              background: 'var(--surface-soft)',
+              borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+              fontSize: '0.8125rem', color: 'var(--muted)',
+            }}>
+              <span>
+                {statusFilter || search || dateFrom || dateTo ? 'Filtrado:' : 'Total:'}{' '}
+                <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                  {sales.length} ventas
+                </strong>
+              </span>
+              <span>
+                Suma:{' '}
+                <strong style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
+                  {formatCurrency(sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0))}
+                </strong>
+              </span>
+            </div>
+          )}
+
           {totalPages > 1 && (
             <div className="pagination">
-              <button
-                className="pagination-btn"
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
+              <button className="pagination-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
                 <ChevronLeft size={16} />
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`pagination-btn ${p === page ? 'active' : ''}`}
-                  onClick={() => setPage(p)}
-                >
+                <button key={p} className={`pagination-btn ${p === page ? 'active' : ''}`} onClick={() => setPage(p)}>
                   {p}
                 </button>
               ))}
-              <button
-                className="pagination-btn"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
+              <button className="pagination-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -302,7 +340,6 @@ export default function SalesPage() {
         </>
       )}
 
-      {/* Create / Edit Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditingSale(null); }}
@@ -318,7 +355,6 @@ export default function SalesPage() {
         />
       </Modal>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={!!deleteConfirm}
         onConfirm={handleDeleteConfirm}
