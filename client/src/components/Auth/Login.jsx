@@ -47,16 +47,15 @@ export default function Login() {
             src="/logo.jpg"
             alt="ACG PRINTS 3D"
             style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
+              width: '76px',
+              height: '76px',
+              borderRadius: '12px',
               objectFit: 'cover',
-              border: '3px solid rgba(0, 212, 170, 0.4)',
-              boxShadow: '0 0 20px rgba(0, 212, 170, 0.3)',
+              border: '1px solid var(--line)',
               marginBottom: '16px'
             }}
           />
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0 }}>ACG PRINTS 3D</h1>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: 0 }}>ACG PRINTS 3D</h1>
           <p style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>Sistema de gestión de ventas</p>
         </div>
 

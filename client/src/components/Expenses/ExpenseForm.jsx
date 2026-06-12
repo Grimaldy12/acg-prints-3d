@@ -45,7 +45,7 @@ export default function ExpenseForm({ expense, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Categoría del Gasto *</label>
           <div style={{ position: 'relative' }}>
-            <Tag size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Tag size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <select
               className="form-select"
               style={{ paddingLeft: '36px' }}
@@ -65,7 +65,7 @@ export default function ExpenseForm({ expense, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Monto ($) *</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80', fontSize: '14px' }}>$</span>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '14px' }}>$</span>
             <input
               type="number"
               className="form-input"
@@ -85,7 +85,7 @@ export default function ExpenseForm({ expense, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Fecha *</label>
           <div style={{ position: 'relative' }}>
-            <Calendar size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Calendar size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="date"
               className="form-input"
@@ -101,7 +101,7 @@ export default function ExpenseForm({ expense, onSave, onCancel }) {
       <div className="form-group">
         <label className="form-label">Descripción</label>
         <div style={{ position: 'relative' }}>
-          <FileText size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#6b6b80' }} />
+          <FileText size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--muted)' }} />
           <textarea
             className="form-textarea"
             style={{ paddingLeft: '36px' }}

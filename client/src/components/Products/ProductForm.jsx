@@ -115,7 +115,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Stock Inicial</label>
           <div style={{ position: 'relative' }}>
-            <Hash size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Hash size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="number"
               className="form-input"
@@ -247,7 +247,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
           )}
 
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }}>$</span>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}>$</span>
             <input
               type="number"
               className="form-input"
@@ -264,7 +264,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Peso (gramos)</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80', fontSize: '0.85rem' }}>g</span>
+            <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '0.85rem' }}>g</span>
             <input
               type="number"
               className="form-input"
@@ -281,7 +281,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Precio de Venta ($) *</label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }}>$</span>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}>$</span>
             <input
               type="number"
               className="form-input"
@@ -301,7 +301,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Tiempo de Impresión (minutos)</label>
           <div style={{ position: 'relative' }}>
-            <Clock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Clock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="number"
               className="form-input"

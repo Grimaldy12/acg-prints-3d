@@ -48,21 +48,10 @@ export default function Sidebar({ isOpen, onClose }) {
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Logo */}
       <div className="sidebar-header">
-        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img
-            src="/logo.jpg"
-            alt="ACG PRINTS 3D"
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '2px solid rgba(0, 212, 170, 0.4)',
-              boxShadow: '0 0 12px rgba(0, 212, 170, 0.2)'
-            }}
-          />
+        <div className="sidebar-logo">
+          <img src="/logo.jpg" alt="ACG PRINTS 3D" />
           <div>
-            <div className="sidebar-logo-text" style={{ fontSize: '1.05rem', lineHeight: '1.2', fontWeight: '800' }}>ACG PRINTS 3D</div>
+            <div className="sidebar-logo-text">ACG PRINTS 3D</div>
             <div className="sidebar-logo-sub">Gestor de Ventas</div>
           </div>
         </div>

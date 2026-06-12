@@ -97,7 +97,7 @@ export default function ExpensesPage() {
       cat,
       amount,
       label: getExpenseCategoryLabel(cat),
-      color: EXPENSE_CATEGORY_COLORS[cat] || '#6b6b80',
+      color: EXPENSE_CATEGORY_COLORS[cat] || 'var(--muted)',
       percentage: totalAmount > 0 ? ((amount / totalAmount) * 100).toFixed(0) : 0
     }))
     .sort((a, b) => b.amount - a.amount);
@@ -316,8 +316,8 @@ export default function ExpensesPage() {
                       padding: '4px 8px',
                       borderRadius: 'var(--radius-full)',
                       backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      border: `1px solid ${EXPENSE_CATEGORY_COLORS[e.category] || '#6b6b80'}`,
-                      color: EXPENSE_CATEGORY_COLORS[e.category] || '#6b6b80',
+                      border: `1px solid ${EXPENSE_CATEGORY_COLORS[e.category] || 'var(--muted)'}`,
+                      color: EXPENSE_CATEGORY_COLORS[e.category] || 'var(--muted)',
                       fontWeight: '600'
                     }}>
                       {getExpenseCategoryLabel(e.category)}

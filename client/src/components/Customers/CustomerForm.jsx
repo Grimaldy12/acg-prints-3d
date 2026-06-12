@@ -45,7 +45,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
       <div className="form-group">
         <label className="form-label">Nombre Completo *</label>
         <div style={{ position: 'relative' }}>
-          <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+          <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
           <input
             type="text"
             className="form-input"
@@ -63,7 +63,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Teléfono / WhatsApp</label>
           <div style={{ position: 'relative' }}>
-            <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="tel"
               className="form-input"
@@ -78,7 +78,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Cédula de Identidad / RIF</label>
           <div style={{ position: 'relative' }}>
-            <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="text"
               className="form-input"
@@ -95,7 +95,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Instagram</label>
           <div style={{ position: 'relative' }}>
-            <Instagram size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Instagram size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="text"
               className="form-input"
@@ -110,7 +110,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
         <div className="form-group">
           <label className="form-label">Correo Electrónico</label>
           <div style={{ position: 'relative' }}>
-            <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b6b80' }} />
+            <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
             <input
               type="email"
               className="form-input"
@@ -126,7 +126,7 @@ export default function CustomerForm({ customer, onSave, onCancel }) {
       <div className="form-group">
         <label className="form-label">Notas / Comentarios</label>
         <div style={{ position: 'relative' }}>
-          <FileText size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#6b6b80' }} />
+          <FileText size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--muted)' }} />
           <textarea
             className="form-textarea"
             style={{ paddingLeft: '36px' }}

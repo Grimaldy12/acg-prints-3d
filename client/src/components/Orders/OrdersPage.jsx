@@ -31,10 +31,10 @@ import Modal from '../UI/Modal.jsx';
 import ConfirmDialog from '../UI/ConfirmDialog.jsx';
 
 const ORDER_STATUSES = [
-  { value: 'cola', label: 'En Cola', color: '#8B5CF6' },
-  { value: 'imprimiendo', label: 'Imprimiendo', color: '#00D4AA' },
-  { value: 'terminado', label: 'Terminado', color: '#EC4899' },
-  { value: 'entregado', label: 'Entregado', color: '#22C55E' }
+  { value: 'cola', label: 'En Cola', color: '#6D4BBE' },
+  { value: 'imprimiendo', label: 'Imprimiendo', color: '#E2570F' },
+  { value: 'terminado', label: 'Terminado', color: '#B83A74' },
+  { value: 'entregado', label: 'Entregado', color: '#2E7D4F' }
 ];
 
 export default function OrdersPage() {
@@ -527,14 +527,14 @@ export default function OrdersPage() {
                           {order.status === 'terminado' && (
                             <button
                               className="btn btn-sm btn-secondary"
-                              style={{ padding: '4px 8px', fontSize: '0.7rem', borderColor: '#22C55E', color: '#22C55E' }}
+                              style={{ padding: '4px 8px', fontSize: '0.7rem', borderColor: '#2E7D4F', color: '#2E7D4F' }}
                               onClick={() => handleTransition(order, 'entregado')}
                             >
                               Entregar <ChevronRight size={12} />
                             </button>
                           )}
                           {order.status === 'entregado' && (
-                            <span style={{ color: '#22C55E', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <span style={{ color: '#2E7D4F', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
                               <CheckCircle size={12} /> Entregado
                             </span>
                           )}
