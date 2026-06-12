@@ -1,161 +1,153 @@
 /* ============================================================
    ACG PRINTS 3D — Generador de recibos PDF
+   Tema: oscuro con azul logo, sin glassmorphism.
    ============================================================ */
 import { jsPDF } from 'jspdf';
 
 const BUSINESS = {
   name:      'ACG PRINTS 3D',
-  tagline:   'Impresión 3D Personalizada',
+  tagline:   'Disenos Personalizados - Impresion 3D',
   phone:     '6219-9471',
   instagram: '@acgprints3d',
-  accent:    [226, 87, 15],   // naranja filamento
-  ink:       [32, 37, 31],    // tinta oscura
-  muted:     [121, 128, 111], // gris taller
-  line:      [219, 220, 208], // línea suave
-  bg:        [246, 246, 241], // fondo suave
+  // Paleta del logo
+  dark:    [10,  12,  18],   // fondo oscuro del logo
+  blue:    [41, 121, 255],   // azul logo
+  silver:  [200, 205, 215],  // plateado logo
+  white:   [255, 255, 255],
+  muted:   [140, 148, 160],
+  line:    [45,  52,  65],
+  rowAlt:  [18,  22,  32],
+  ink:     [230, 235, 245],
 };
 
-function formatMoney(val) {
-  return `$${Number(val || 0).toFixed(2)}`;
+function fmt(val) {
+  return '$' + Number(val || 0).toFixed(2);
 }
 
-function formatDateStr(str) {
-  if (!str) return '—';
+function fmtDate(str) {
+  if (!str) return '-';
   const d = new Date(str);
   if (isNaN(d)) return str;
-  return d.toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' });
+  const months = ['enero','febrero','marzo','abril','mayo','junio',
+                  'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
-function receiptNumber(data) {
+function receiptNum(data) {
   if (data.receipt_number) return `#${data.receipt_number}`;
   if (data.id) return `#${String(data.id).slice(-6).toUpperCase()}`;
-  return '#N/A';
+  return '#---';
 }
 
-/* ── Función principal ──────────────────────────────────────── */
 export function generateReceiptPDF(data, type = 'sale') {
   const doc = new jsPDF({ unit: 'mm', format: 'a5', orientation: 'portrait' });
-  const W = doc.internal.pageSize.getWidth();   // 148mm
-  const H = doc.internal.pageSize.getHeight();  // 210mm
-  const M = 14; // margen
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const M = 14;
   let y = 0;
 
-  // ── Helpers ────────────────────────────────────────────────
-  const rgb  = (arr) => ({ r: arr[0], g: arr[1], b: arr[2] });
-  const setC = (arr) => doc.setTextColor(...arr);
-  const setF = (arr) => doc.setFillColor(...arr);
-  const setD = (arr) => doc.setDrawColor(...arr);
+  const B = BUSINESS;
 
-  // ── Fondo blanco ───────────────────────────────────────────
-  setF([255, 255, 255]);
+  // ── Fondo total oscuro ────────────────────────────────────
+  doc.setFillColor(...B.dark);
   doc.rect(0, 0, W, H, 'F');
 
-  // ── Encabezado naranja ─────────────────────────────────────
-  setF(BUSINESS.accent);
-  doc.rect(0, 0, W, 28, 'F');
+  // ── Encabezado: banda azul oscura ─────────────────────────
+  doc.setFillColor(18, 28, 55);
+  doc.rect(0, 0, W, 30, 'F');
 
-  // Líneas de capa (firma visual) en el encabezado
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.3);
-  for (let x = 0; x < W; x += 5) {
-    doc.line(x, 0, x, 28);
-  }
-  doc.setGState(new doc.GState({ opacity: 1 }));
+  // Borde inferior azul brillante
+  doc.setDrawColor(...B.blue);
+  doc.setLineWidth(0.8);
+  doc.line(0, 30, W, 30);
 
-  // Nombre del negocio
+  // Acento azul izquierdo (barra vertical)
+  doc.setFillColor(...B.blue);
+  doc.rect(0, 0, 4, 30, 'F');
+
+  // Nombre negocio
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
-  doc.setTextColor(255, 255, 255);
-  doc.text(BUSINESS.name, M, 11);
+  doc.setFontSize(14);
+  doc.setTextColor(...B.white);
+  doc.text('ACG PRINTS 3D', M + 4, 12);
 
   // Tagline
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(255, 220, 190);
-  doc.text(BUSINESS.tagline, M, 17);
+  doc.setFontSize(7);
+  doc.setTextColor(...B.silver);
+  doc.text(B.tagline, M + 4, 19);
 
-  // Tipo de documento (derecha)
+  // Tipo doc (derecha)
+  const label = type === 'order' ? 'PEDIDO' : 'RECIBO';
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  const label = type === 'order' ? 'PEDIDO' : 'RECIBO';
-  doc.text(label, W - M, 11, { align: 'right' });
+  doc.setTextColor(...B.blue);
+  doc.text(label, W - M, 12, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...B.silver);
+  doc.text(receiptNum(data), W - M, 19, { align: 'right' });
+
+  y = 38;
+
+  // ── Contacto ──────────────────────────────────────────────
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(255, 220, 190);
-  doc.text(receiptNumber(data), W - M, 17, { align: 'right' });
-
-  y = 36;
-
-  // ── Datos del negocio ──────────────────────────────────────
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  setC(BUSINESS.muted);
-  doc.text(`Tel: ${BUSINESS.phone}   Instagram: ${BUSINESS.instagram}`, M, y);
+  doc.setTextColor(...B.muted);
+  doc.text(`Tel: ${B.phone}   Instagram: ${B.instagram}`, M, y);
   y += 7;
 
-  // ── Línea divisora ─────────────────────────────────────────
-  setD(BUSINESS.line);
-  doc.setLineWidth(0.4);
+  // ── Separador ─────────────────────────────────────────────
+  doc.setDrawColor(...B.line);
+  doc.setLineWidth(0.3);
   doc.line(M, y, W - M, y);
-  y += 6;
+  y += 7;
 
-  // ── Info del cliente y fecha ───────────────────────────────
+  // ── Cliente + Fecha ───────────────────────────────────────
   const clientName = data.customer_name || data.customer?.name || 'Sin cliente';
-  const dateStr    = formatDateStr(data.created_at || data.date);
-  const statusLabel = {
-    pendiente: 'Pendiente', pagado: 'Pagado', entregado: 'Entregado',
-    cancelado: 'Cancelado', cola: 'En cola', imprimiendo: 'Imprimiendo',
-    terminado: 'Terminado',
-  }[data.status] || data.status || '—';
+  const dateStr    = fmtDate(data.created_at || data.date);
 
-  // Columna izquierda: cliente
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  setC(BUSINESS.muted);
+  doc.setFontSize(7);
+  doc.setTextColor(...B.muted);
   doc.text('CLIENTE', M, y);
+  doc.text('FECHA', W - M, y, { align: 'right' });
+
+  y += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  setC(BUSINESS.ink);
-  doc.text(clientName, M, y + 5);
-
-  // Columna derecha: fecha + estado
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  setC(BUSINESS.muted);
-  doc.text('FECHA', W - M, y, { align: 'right' });
+  doc.setTextColor(...B.ink);
+  doc.text(clientName, M, y);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  setC(BUSINESS.ink);
-  doc.text(dateStr, W - M, y + 5, { align: 'right' });
+  doc.text(dateStr, W - M, y, { align: 'right' });
+  y += 8;
 
-  y += 14;
-
-  // Notas del pedido (si aplica)
+  // Notas
   if (data.notes) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7.5);
-    setC(BUSINESS.muted);
-    const noteLines = doc.splitTextToSize(`Nota: ${data.notes}`, W - M * 2);
-    doc.text(noteLines, M, y);
-    y += noteLines.length * 4 + 2;
+    doc.setTextColor(...B.muted);
+    const lines = doc.splitTextToSize(`Nota: ${data.notes}`, W - M * 2);
+    doc.text(lines, M, y);
+    y += lines.length * 4 + 2;
   }
 
-  // ── Encabezado de tabla ────────────────────────────────────
-  setF(BUSINESS.bg);
+  // ── Encabezado tabla ──────────────────────────────────────
+  doc.setFillColor(18, 28, 55);
   doc.rect(M, y, W - M * 2, 7, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
-  setC(BUSINESS.muted);
-  doc.text('PRODUCTO / DESCRIPCIÓN', M + 2, y + 4.8);
-  doc.text('CANT', W - M - 32, y + 4.8, { align: 'right' });
-  doc.text('P.UNIT', W - M - 14, y + 4.8, { align: 'right' });
-  doc.text('SUBTOTAL', W - M, y + 4.8, { align: 'right' });
+  doc.setTextColor(...B.blue);
+  doc.text('PRODUCTO / DESCRIPCION', M + 2, y + 4.8);
+  doc.text('CANT',     W - M - 32, y + 4.8, { align: 'right' });
+  doc.text('P.UNIT',   W - M - 14, y + 4.8, { align: 'right' });
+  doc.text('SUBTOTAL', W - M,      y + 4.8, { align: 'right' });
   y += 9;
 
-  // ── Ítems ──────────────────────────────────────────────────
+  // ── Ítems ─────────────────────────────────────────────────
   const items = data.items || [];
-  setD(BUSINESS.line);
+  doc.setDrawColor(...B.line);
   doc.setLineWidth(0.2);
 
   items.forEach((item, i) => {
@@ -164,102 +156,87 @@ export function generateReceiptPDF(data, type = 'sale') {
     const price    = Number(item.unit_price || item.price || 0);
     const subtotal = Number(item.subtotal || qty * price);
 
-    // Fondo alterno suave
     if (i % 2 === 0) {
-      setF([252, 252, 250]);
+      doc.setFillColor(...B.rowAlt);
       doc.rect(M, y - 1, W - M * 2, 7, 'F');
     }
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
-    setC(BUSINESS.ink);
+    doc.setTextColor(...B.ink);
     const nameLines = doc.splitTextToSize(name, W - M * 2 - 52);
     doc.text(nameLines, M + 2, y + 4);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    setC(BUSINESS.muted);
-    doc.text(String(qty),           W - M - 32, y + 4, { align: 'right' });
-    doc.text(formatMoney(price),    W - M - 14, y + 4, { align: 'right' });
-    setC(BUSINESS.ink);
-    doc.text(formatMoney(subtotal), W - M,      y + 4, { align: 'right' });
+
+    doc.setTextColor(...B.muted);
+    doc.text(String(qty),        W - M - 32, y + 4, { align: 'right' });
+    doc.text(fmt(price),         W - M - 14, y + 4, { align: 'right' });
+    doc.setTextColor(...B.ink);
+    doc.text(fmt(subtotal),      W - M,      y + 4, { align: 'right' });
 
     y += Math.max(nameLines.length * 5, 7);
+    doc.setDrawColor(...B.line);
     doc.line(M, y, W - M, y);
     y += 1;
   });
 
   y += 3;
 
-  // ── Descuento (si aplica) ──────────────────────────────────
+  // ── Descuento ─────────────────────────────────────────────
   if (data.discount && Number(data.discount) > 0) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
-    setC(BUSINESS.muted);
+    doc.setTextColor(...B.muted);
     doc.text('Descuento', W - M - 28, y, { align: 'right' });
-    doc.text(`-${formatMoney(data.discount)}`, W - M, y, { align: 'right' });
+    doc.text(`-${fmt(data.discount)}`, W - M, y, { align: 'right' });
     y += 6;
   }
 
-  // ── Adelanto (pedidos) ─────────────────────────────────────
+  // ── Adelanto (pedidos) ────────────────────────────────────
   if (type === 'order' && data.deposit && Number(data.deposit) > 0) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
-    setC(BUSINESS.muted);
+    doc.setTextColor(...B.muted);
     doc.text('Adelanto recibido', W - M - 28, y, { align: 'right' });
-    doc.text(`-${formatMoney(data.deposit)}`, W - M, y, { align: 'right' });
+    doc.text(`-${fmt(data.deposit)}`, W - M, y, { align: 'right' });
     y += 6;
 
-    const remaining = Number(data.total || 0) - Number(data.deposit || 0);
+    const remaining = Math.max(0, Number(data.total || 0) - Number(data.deposit || 0));
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
-    setC(BUSINESS.muted);
+    doc.setTextColor(...B.muted);
     doc.text('Saldo pendiente', W - M - 28, y, { align: 'right' });
-    setC(remaining > 0 ? [193, 58, 46] : [46, 125, 79]);
-    doc.text(formatMoney(Math.max(0, remaining)), W - M, y, { align: 'right' });
+    doc.setTextColor(remaining > 0 ? 220 : 80, remaining > 0 ? 80 : 180, remaining > 0 ? 60 : 100);
+    doc.text(fmt(remaining), W - M, y, { align: 'right' });
     y += 6;
   }
 
-  // ── Total ──────────────────────────────────────────────────
-  setF(BUSINESS.ink);
-  doc.rect(M, y, W - M * 2, 10, 'F');
+  // ── Total ─────────────────────────────────────────────────
+  // Fondo azul para el total
+  doc.setFillColor(...B.blue);
+  doc.rect(M, y, W - M * 2, 11, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text('TOTAL', M + 4, y + 6.5);
-  doc.setFontSize(12);
-  doc.text(formatMoney(data.total), W - M - 2, y + 6.5, { align: 'right' });
-  y += 16;
+  doc.setTextColor(...B.white);
+  doc.text('TOTAL', M + 4, y + 7.2);
+  doc.setFontSize(13);
+  doc.text(fmt(data.total), W - M - 2, y + 7.5, { align: 'right' });
+  y += 17;
 
-  // ── Estado ────────────────────────────────────────────────
-  const statusColors = {
-    pendiente: BUSINESS.accent, pagado: [46, 125, 79], entregado: [47, 99, 196],
-    cancelado: [193, 58, 46],   cola: [109, 75, 190],  imprimiendo: BUSINESS.accent,
-    terminado: [184, 58, 116],
-  };
-  const sColor = statusColors[data.status] || BUSINESS.muted;
-  setF([...sColor, 0.15].slice(0,3));
-  doc.setFillColor(sColor[0], sColor[1], sColor[2]);
-  doc.setGState(new doc.GState({ opacity: 0.12 }));
-  doc.rect(M, y, 40, 7, 'F');
-  doc.setGState(new doc.GState({ opacity: 1 }));
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...sColor);
-  doc.text(`Estado: ${statusLabel}`, M + 2, y + 4.8);
-  y += 12;
-
-  // ── Pie de página ──────────────────────────────────────────
-  setD(BUSINESS.line);
+  // ── Pie ───────────────────────────────────────────────────
+  doc.setDrawColor(...B.line);
   doc.setLineWidth(0.3);
-  doc.line(M, H - 18, W - M, H - 18);
+  doc.line(M, H - 16, W - M, H - 16);
+
+  // Acento azul en el pie
+  doc.setFillColor(...B.blue);
+  doc.rect(0, H - 6, W, 6, 'F');
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  setC(BUSINESS.muted);
-  doc.text('¡Gracias por tu compra! · acgprints3d', W / 2, H - 13, { align: 'center' });
-  doc.text(`Generado el ${new Date().toLocaleDateString('es-PA')}`, W / 2, H - 8, { align: 'center' });
+  doc.setTextColor(...B.muted);
+  doc.text('Gracias por tu compra! - acgprints3d', W / 2, H - 10, { align: 'center' });
 
-  // ── Guardar ────────────────────────────────────────────────
+  // ── Guardar ───────────────────────────────────────────────
   const num = data.receipt_number || String(data.id || '').slice(-6).toUpperCase();
-  const filename = `recibo_${type === 'order' ? 'pedido' : 'venta'}_${num}.pdf`;
-  doc.save(filename);
+  doc.save(`recibo_${type === 'order' ? 'pedido' : 'venta'}_${num}.pdf`);
 }
