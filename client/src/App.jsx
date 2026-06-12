@@ -10,6 +10,7 @@ import ProductsPage from './components/Products/ProductsPage.jsx';
 import CustomersPage from './components/Customers/CustomersPage.jsx';
 import ExpensesPage from './components/Expenses/ExpensesPage.jsx';
 import OrdersPage from './components/Orders/OrdersPage.jsx';
+import ReportsPage from './components/Reports/ReportsPage.jsx';
 import Toast from './components/UI/Toast.jsx';
 
 // ── Auth Context ─────────────────────────────────────────────
@@ -137,6 +138,7 @@ export default function App() {
               <Route path="clientes" element={<CustomersPage />} />
               <Route path="gastos" element={<ExpensesPage />} />
               <Route path="pedidos" element={<OrdersPage />} />
+              <Route path="reportes" element={<ReportsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
