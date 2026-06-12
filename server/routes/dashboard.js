@@ -3,27 +3,25 @@ const db = require('../database');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
-
-// All dashboard routes require authentication
 router.use(authMiddleware);
 
-// Helper to format ISO date prefix (YYYY-MM)
 function getYearMonthPrefix(dateStr) {
   if (!dateStr) return '';
-  return dateStr.substring(0, 7); // 'YYYY-MM'
+  return dateStr.substring(0, 7);
+}
+
+function currentMonthPrefix() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
 // ──────────────────────────────────────────────
-// GET /api/dashboard/summary
+// GET /api/dashboard/summary?month=YYYY-MM
 // ──────────────────────────────────────────────
 router.get('/summary', async (req, res) => {
   try {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const monthPrefix = `${year}-${month}`; // YYYY-MM
+    const monthPrefix = req.query.month || currentMonthPrefix();
 
-    // Fetch all collections in parallel for maximum speed
     const [salesSnap, expensesSnap, customersSnap, productsSnap, ordersSnap] = await Promise.all([
       db.collection('sales').get(),
       db.collection('expenses').get(),
@@ -32,38 +30,34 @@ router.get('/summary', async (req, res) => {
       db.collection('orders').get()
     ]);
 
-    const sales = salesSnap.docs.map(doc => doc.data());
+    const sales    = salesSnap.docs.map(doc => doc.data());
     const expenses = expensesSnap.docs.map(doc => doc.data());
-    const orders = ordersSnap.docs.map(doc => doc.data());
+    const orders   = ordersSnap.docs.map(doc => doc.data());
 
-    // Filter sales for the current month (where status !== 'cancelado')
-    const currentMonthSales = sales.filter(s => 
-      s.created_at && 
-      getYearMonthPrefix(s.created_at) === monthPrefix && 
-      s.status !== 'cancelado'
+    const monthSales = sales.filter(s =>
+      s.created_at && getYearMonthPrefix(s.created_at) === monthPrefix && s.status !== 'cancelado'
+    );
+    const monthExpenses = expenses.filter(e =>
+      e.date && getYearMonthPrefix(e.date) === monthPrefix
     );
 
-    // Filter expenses for the current month
-    const currentMonthExpenses = expenses.filter(e => 
-      e.date && 
-      getYearMonthPrefix(e.date) === monthPrefix
-    );
-
-    const totalSalesMonth = currentMonthSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
-    const totalExpensesMonth = currentMonthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const salesCountMonth = currentMonthSales.length;
+    const totalSales    = monthSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const totalExpenses = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     res.json({
       data: {
-        total_sales_month: totalSalesMonth,
-        total_expenses_month: totalExpensesMonth,
-        profit_month: totalSalesMonth - totalExpensesMonth,
+        month: monthPrefix,
+        total_sales_month: totalSales,
+        total_expenses_month: totalExpenses,
+        profit_month: totalSales - totalExpenses,
         total_customers: customersSnap.size,
         total_products: productsSnap.size,
-        sales_count_month: salesCountMonth,
-        active_orders_count: orders.filter(o => o.status === 'cola' || o.status === 'imprimiendo').length,
+        sales_count_month: monthSales.length,
+        active_orders_count:   orders.filter(o => o.status === 'cola' || o.status === 'imprimiendo').length,
         finished_orders_count: orders.filter(o => o.status === 'terminado').length,
-        total_active_deposits: orders.filter(o => o.status !== 'entregado' && o.status !== 'cancelado').reduce((sum, o) => sum + (Number(o.deposit) || 0), 0)
+        total_active_deposits: orders
+          .filter(o => o.status !== 'entregado' && o.status !== 'cancelado')
+          .reduce((sum, o) => sum + (Number(o.deposit) || 0), 0),
       },
     });
   } catch (err) {
@@ -73,87 +67,63 @@ router.get('/summary', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// GET /api/dashboard/sales-chart
+// GET /api/dashboard/sales-chart  (sin cambios)
 // ──────────────────────────────────────────────
 router.get('/sales-chart', async (req, res) => {
   try {
-    // Build list of last 12 months (e.g. YYYY-MM)
     const months = [];
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      months.push(key);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
 
     const salesSnap = await db.collection('sales').get();
     const sales = salesSnap.docs.map(doc => doc.data());
 
-    // Aggregate in memory
     const monthlyData = {};
-    months.forEach(m => {
-      monthlyData[m] = { total: 0, count: 0 };
-    });
+    months.forEach(m => { monthlyData[m] = { total: 0, count: 0 }; });
 
     sales.forEach(s => {
       if (s.status !== 'cancelado' && s.created_at) {
-        const monthPrefix = getYearMonthPrefix(s.created_at);
-        if (monthlyData[monthPrefix]) {
-          monthlyData[monthPrefix].total += (Number(s.total) || 0);
-          monthlyData[monthPrefix].count += 1;
+        const mp = getYearMonthPrefix(s.created_at);
+        if (monthlyData[mp]) {
+          monthlyData[mp].total += (Number(s.total) || 0);
+          monthlyData[mp].count += 1;
         }
       }
     });
 
-    const chart = months.map(m => ({
-      month: m,
-      total: monthlyData[m].total,
-      count: monthlyData[m].count
-    }));
-
-    res.json({ data: chart });
+    res.json({ data: months.map(m => ({ month: m, total: monthlyData[m].total, count: monthlyData[m].count })) });
   } catch (err) {
     console.error('Sales chart error:', err.message);
-    res.status(500).json({ error: 'Error al obtener datos del gráfico de ventas.' });
+    res.status(500).json({ error: 'Error al obtener gráfico de ventas.' });
   }
 });
 
 // ──────────────────────────────────────────────
-// GET /api/dashboard/top-products
+// GET /api/dashboard/top-products  (sin cambios)
 // ──────────────────────────────────────────────
 router.get('/top-products', async (req, res) => {
   try {
     const salesSnap = await db.collection('sales').get();
     const sales = salesSnap.docs.map(doc => doc.data());
-
-    // Aggregate sold products in memory
-    const productAgg = {};
+    const agg = {};
 
     sales.forEach(s => {
       if (s.status !== 'cancelado' && Array.isArray(s.items)) {
         s.items.forEach(item => {
           const pid = item.product_id;
           if (pid) {
-            if (!productAgg[pid]) {
-              productAgg[pid] = {
-                name: item.product_name || 'Producto',
-                total_quantity: 0,
-                total_revenue: 0
-              };
-            }
-            productAgg[pid].total_quantity += (Number(item.quantity) || 0);
-            productAgg[pid].total_revenue += (Number(item.subtotal) || 0);
+            if (!agg[pid]) agg[pid] = { name: item.product_name || 'Producto', total_quantity: 0, total_revenue: 0 };
+            agg[pid].total_quantity += (Number(item.quantity) || 0);
+            agg[pid].total_revenue  += (Number(item.subtotal) || 0);
           }
         });
       }
     });
 
-    // Convert to sorted array and limit to top 5
-    const topProducts = Object.values(productAgg)
-      .sort((a, b) => b.total_quantity - a.total_quantity)
-      .slice(0, 5);
-
-    res.json({ data: topProducts });
+    res.json({ data: Object.values(agg).sort((a, b) => b.total_quantity - a.total_quantity).slice(0, 5) });
   } catch (err) {
     console.error('Top products error:', err.message);
     res.status(500).json({ error: 'Error al obtener productos más vendidos.' });
@@ -161,35 +131,23 @@ router.get('/top-products', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// GET /api/dashboard/expenses-breakdown
+// GET /api/dashboard/expenses-breakdown?month=YYYY-MM
 // ──────────────────────────────────────────────
 router.get('/expenses-breakdown', async (req, res) => {
   try {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const monthPrefix = `${year}-${month}`; // YYYY-MM
+    const monthPrefix = req.query.month || currentMonthPrefix();
 
     const expensesSnap = await db.collection('expenses').get();
     const expenses = expensesSnap.docs.map(doc => doc.data());
-
-    // Aggregate by category in memory
-    const categoryAgg = {};
+    const agg = {};
 
     expenses.forEach(e => {
       if (e.date && getYearMonthPrefix(e.date) === monthPrefix) {
-        const cat = e.category;
-        const amt = Number(e.amount) || 0;
-        categoryAgg[cat] = (categoryAgg[cat] || 0) + amt;
+        agg[e.category] = (agg[e.category] || 0) + (Number(e.amount) || 0);
       }
     });
 
-    const breakdown = Object.entries(categoryAgg).map(([category, total]) => ({
-      category,
-      total
-    })).sort((a, b) => b.total - a.total);
-
-    res.json({ data: breakdown });
+    res.json({ data: Object.entries(agg).map(([category, total]) => ({ category, total })).sort((a, b) => b.total - a.total) });
   } catch (err) {
     console.error('Expenses breakdown error:', err.message);
     res.status(500).json({ error: 'Error al obtener desglose de gastos.' });
@@ -197,21 +155,12 @@ router.get('/expenses-breakdown', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// GET /api/dashboard/recent-sales
+// GET /api/dashboard/recent-sales  (sin cambios)
 // ──────────────────────────────────────────────
 router.get('/recent-sales', async (req, res) => {
   try {
-    const salesSnap = await db.collection('sales')
-      .orderBy('created_at', 'desc')
-      .limit(5)
-      .get();
-
-    const sales = salesSnap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    res.json({ data: sales });
+    const salesSnap = await db.collection('sales').orderBy('created_at', 'desc').limit(5).get();
+    res.json({ data: salesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
   } catch (err) {
     console.error('Recent sales error:', err.message);
     res.status(500).json({ error: 'Error al obtener ventas recientes.' });

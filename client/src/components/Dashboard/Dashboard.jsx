@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  TrendingUp, TrendingDown, DollarSign,
-  Users, ShoppingCart, Package, ArrowRight, Printer, ClipboardList
+  TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart,
+  Package, ArrowRight, Printer, ClipboardList, ChevronLeft, ChevronRight, Calendar,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,26 +12,50 @@ import { api } from '../../utils/api';
 import { formatCurrency, formatDate, getMonthName } from '../../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../../utils/constants';
 
-// Paleta "taller": tinta + naranja filamento + semánticos sobrios
 const PIE_COLORS = ['#E2570F', '#20251F', '#6D4BBE', '#2E7D4F', '#2F63C4', '#B83A74', '#A66B06', '#79806F', '#C13A2E'];
 
-/* ── Contador animado: los números "se imprimen" al cargar ──── */
-function useCountUp(target, duration = 900) {
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+/* ── Utilidades de mes ──────────────────────────────────────── */
+function toPrefix(year, month) {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function prefixToLabel(prefix) {
+  const [y, m] = prefix.split('-');
+  return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+}
+
+function addMonths(prefix, delta) {
+  const [y, m] = prefix.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return toPrefix(d.getFullYear(), d.getMonth() + 1);
+}
+
+function isCurrentMonth(prefix) {
+  const now = new Date();
+  return prefix === toPrefix(now.getFullYear(), now.getMonth() + 1);
+}
+
+/* ── Contador animado ───────────────────────────────────────── */
+function useCountUp(target, duration = 800) {
   const [value, setValue] = useState(0);
   const raf = useRef(null);
+  const prev = useRef(0);
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced || !target) {
-      setValue(target || 0);
-      return;
-    }
+    if (reduced) { setValue(target || 0); return; }
+    const from = prev.current;
+    const to   = target || 0;
+    prev.current = to;
+    cancelAnimationFrame(raf.current);
     const start = performance.now();
     const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cúbico
-      setValue(target * eased);
-      if (progress < 1) raf.current = requestAnimationFrame(tick);
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setValue(from + (to - from) * eased);
+      if (p < 1) raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
@@ -42,7 +66,7 @@ function useCountUp(target, duration = 900) {
 
 function StatCard({ icon: Icon, label, value, color, isCurrency = true, trend }) {
   const animated = useCountUp(value);
-  const display = isCurrency
+  const display  = isCurrency
     ? formatCurrency(animated)
     : Math.round(animated).toLocaleString('es-PA');
 
@@ -66,42 +90,35 @@ function StatCard({ icon: Icon, label, value, color, isCurrency = true, trend })
 }
 
 function CustomTooltip({ active, payload, label }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="chart-tooltip">
-        <p className="chart-tooltip-label">{getMonthName(label)}</p>
-        <p className="chart-tooltip-value income">{formatCurrency(payload[0].value)}</p>
-      </div>
-    );
-  }
+  if (active && payload?.length) return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{getMonthName(label)}</p>
+      <p className="chart-tooltip-value income">{formatCurrency(payload[0].value)}</p>
+    </div>
+  );
   return null;
 }
 
 function ProductTooltip({ active, payload }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="chart-tooltip">
-        <p className="chart-tooltip-label">{payload[0].payload.name}</p>
-        <p className="chart-tooltip-value income">{formatCurrency(payload[0].value)}</p>
-      </div>
-    );
-  }
+  if (active && payload?.length) return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{payload[0].payload.name}</p>
+      <p className="chart-tooltip-value income">{formatCurrency(payload[0].value)}</p>
+    </div>
+  );
   return null;
 }
 
 function PieTooltip({ active, payload }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="chart-tooltip">
-        <p className="chart-tooltip-label">{payload[0].name}</p>
-        <p className="chart-tooltip-value expense">{formatCurrency(payload[0].value)}</p>
-      </div>
-    );
-  }
+  if (active && payload?.length) return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip-label">{payload[0].name}</p>
+      <p className="chart-tooltip-value expense">{formatCurrency(payload[0].value)}</p>
+    </div>
+  );
   return null;
 }
 
-/* ── Esqueleto de carga: la página mantiene su estructura ───── */
 function DashboardSkeleton() {
   return (
     <div className="dashboard-page">
@@ -112,14 +129,10 @@ function DashboardSkeleton() {
         </div>
       </div>
       <div className="stats-grid">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="skeleton skeleton-card" />
-        ))}
+        {[0,1,2,3].map(i => <div key={i} className="skeleton skeleton-card" />)}
       </div>
       <div className="charts-grid">
-        {[0, 1].map((i) => (
-          <div key={i} className="skeleton skeleton-chart" />
-        ))}
+        {[0,1].map(i => <div key={i} className="skeleton skeleton-chart" />)}
       </div>
     </div>
   );
@@ -133,24 +146,28 @@ function getGreeting() {
 }
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState(null);
-  const [salesChart, setSalesChart] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(
+    toPrefix(now.getFullYear(), now.getMonth() + 1)
+  );
+
+  const [summary, setSummary]                 = useState(null);
+  const [salesChart, setSalesChart]           = useState([]);
+  const [topProducts, setTopProducts]         = useState([]);
   const [expensesBreakdown, setExpensesBreakdown] = useState([]);
-  const [recentSales, setRecentSales] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [recentSales, setRecentSales]         = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [refreshing, setRefreshing]           = useState(false);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  async function loadDashboard() {
+  const loadDashboard = useCallback(async (month, initial = false) => {
+    if (initial) setLoading(true); else setRefreshing(true);
     try {
+      const qs = `?month=${month}`;
       const [summaryRes, chartRes, productsRes, expensesRes, recentRes] = await Promise.all([
-        api.get('/api/dashboard/summary'),
+        api.get(`/api/dashboard/summary${qs}`),
         api.get('/api/dashboard/sales-chart'),
         api.get('/api/dashboard/top-products'),
-        api.get('/api/dashboard/expenses-breakdown'),
+        api.get(`/api/dashboard/expenses-breakdown${qs}`),
         api.get('/api/dashboard/recent-sales'),
       ]);
       setSummary(summaryRes.data);
@@ -162,65 +179,82 @@ export default function Dashboard() {
       console.error('Dashboard load error:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, []);
 
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
+  useEffect(() => { loadDashboard(selectedMonth, true); }, []);
+
+  useEffect(() => {
+    // No recargar en el primer render (ya lo hace el de arriba)
+    loadDashboard(selectedMonth, false);
+  }, [selectedMonth]);
+
+  const goPrev = () => setSelectedMonth(m => addMonths(m, -1));
+  const goNext = () => setSelectedMonth(m => addMonths(m, +1));
+  const goNow  = () => setSelectedMonth(toPrefix(now.getFullYear(), now.getMonth() + 1));
+
+  if (loading) return <DashboardSkeleton />;
 
   const getCategoryLabel = (cat) => {
     const found = EXPENSE_CATEGORIES.find(c => c.value === cat);
     return found ? found.label : cat;
   };
 
-  const rawDate = new Date().toLocaleDateString('es-PA', {
-    weekday: 'long', day: 'numeric', month: 'long',
-  });
-  const today = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
+  const rawDate = now.toLocaleDateString('es-PA', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today   = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
+  const isCurrent = isCurrentMonth(selectedMonth);
 
   return (
     <div className="dashboard-page">
+      {/* Header + selector de mes */}
       <div className="page-header">
         <div>
           <h1>{getGreeting()}</h1>
           <p className="page-subtitle">{today} · así va el taller</p>
         </div>
+
+        {/* ── Selector de mes ─────────────────────────────── */}
+        <div className="month-selector">
+          <button className="month-nav-btn" onClick={goPrev} title="Mes anterior">
+            <ChevronLeft size={18} />
+          </button>
+
+          <div className="month-label">
+            <Calendar size={14} style={{ color: 'var(--accent)' }} />
+            <span>{prefixToLabel(selectedMonth)}</span>
+            {refreshing && <span className="month-loading" />}
+          </div>
+
+          <button
+            className="month-nav-btn"
+            onClick={goNext}
+            disabled={isCurrent}
+            title="Mes siguiente"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          {!isCurrent && (
+            <button className="month-today-btn" onClick={goNow}>
+              Hoy
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tarjetas de estadísticas */}
       <div className="stats-grid">
-        <StatCard
-          icon={TrendingUp}
-          label="Ventas del mes"
-          value={summary?.total_sales_month || 0}
-          color="#2E7D4F"
-        />
-        <StatCard
-          icon={TrendingDown}
-          label="Gastos del mes"
-          value={summary?.total_expenses_month || 0}
-          color="#C13A2E"
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Ganancia"
-          value={summary?.profit_month || 0}
-          color="#E2570F"
-        />
-        <StatCard
-          icon={Users}
-          label="Clientes"
-          value={summary?.total_customers || 0}
-          color="#6D4BBE"
-          isCurrency={false}
-        />
+        <StatCard icon={TrendingUp}  label="Ventas del mes"  value={summary?.total_sales_month || 0}    color="#2E7D4F" />
+        <StatCard icon={TrendingDown} label="Gastos del mes"  value={summary?.total_expenses_month || 0} color="#C13A2E" />
+        <StatCard icon={DollarSign}  label="Ganancia"         value={summary?.profit_month || 0}         color="#E2570F" />
+        <StatCard icon={Users}       label="Clientes"         value={summary?.total_customers || 0}      color="#6D4BBE" isCurrency={false} />
       </div>
 
-      {/* Producción y pedidos activos */}
+      {/* Producción */}
       <div style={{ marginTop: '32px', marginBottom: '8px' }}>
         <h2 style={{
-          fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)',
+          fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)',
           textTransform: 'uppercase', letterSpacing: '0.1em',
           fontFamily: 'var(--font-mono)', marginBottom: '14px',
           display: 'flex', alignItems: 'center', gap: '8px',
@@ -229,26 +263,9 @@ export default function Dashboard() {
           Producción y pedidos activos
         </h2>
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-          <StatCard
-            icon={ClipboardList}
-            label="En cola / imprimiendo"
-            value={summary?.active_orders_count || 0}
-            color="#6D4BBE"
-            isCurrency={false}
-          />
-          <StatCard
-            icon={Printer}
-            label="Listos para entregar"
-            value={summary?.finished_orders_count || 0}
-            color="#B83A74"
-            isCurrency={false}
-          />
-          <StatCard
-            icon={DollarSign}
-            label="Adelantos en caja"
-            value={summary?.total_active_deposits || 0}
-            color="#2F63C4"
-          />
+          <StatCard icon={ClipboardList} label="En cola / imprimiendo"  value={summary?.active_orders_count || 0}   color="#6D4BBE" isCurrency={false} />
+          <StatCard icon={Printer}       label="Listos para entregar"    value={summary?.finished_orders_count || 0} color="#B83A74" isCurrency={false} />
+          <StatCard icon={DollarSign}    label="Adelantos en caja"       value={summary?.total_active_deposits || 0} color="#2F63C4" />
         </div>
       </div>
 
@@ -256,84 +273,43 @@ export default function Dashboard() {
       <div className="charts-grid">
         {/* Ventas mensuales */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            <ShoppingCart size={18} />
-            Ventas mensuales
-          </h3>
+          <h3 className="chart-title"><ShoppingCart size={18} />Ventas mensuales</h3>
           <div className="chart-container">
             {salesChart.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={salesChart}>
                   <defs>
                     <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#E2570F" stopOpacity={0.22} />
+                      <stop offset="5%"  stopColor="#E2570F" stopOpacity={0.22} />
                       <stop offset="95%" stopColor="#E2570F" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#DBDCD0" />
-                  <XAxis
-                    dataKey="month"
-                    tickFormatter={(m) => m.split('-')[1]}
-                    stroke="#79806F"
-                    fontSize={12}
-                  />
-                  <YAxis stroke="#79806F" fontSize={12} tickFormatter={(v) => `$${v}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                  <XAxis dataKey="month" tickFormatter={m => m.split('-')[1]} stroke="var(--muted)" fontSize={12} />
+                  <YAxis stroke="var(--muted)" fontSize={12} tickFormatter={v => `$${v}`} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#E2570F"
-                    strokeWidth={2.5}
-                    fill="url(#salesGradient)"
-                    animationDuration={900}
-                  />
+                  <Area type="monotone" dataKey="total" stroke="#E2570F" strokeWidth={2.5} fill="url(#salesGradient)" animationDuration={900} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="empty-chart">Sin ventas todavía. Registra la primera y aquí verás la curva.</div>
+              <div className="empty-chart">Sin ventas todavía.</div>
             )}
           </div>
         </div>
 
         {/* Productos más vendidos */}
         <div className="chart-card">
-          <h3 className="chart-title">
-            <Package size={18} />
-            Productos más vendidos
-          </h3>
+          <h3 className="chart-title"><Package size={18} />Productos más vendidos</h3>
           <div className="chart-container">
             {topProducts.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={topProducts} margin={{ left: 10, right: 10, top: 20, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#DBDCD0" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    stroke="#79806F"
-                    fontSize={10}
-                    interval={0}
-                    tick={{ fill: '#4C5249' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    stroke="#79806F"
-                    fontSize={11}
-                    tickFormatter={(v) => `$${v}`}
-                    tick={{ fill: '#4C5249' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<ProductTooltip />} cursor={{ fill: 'rgba(32, 37, 31, 0.05)', radius: [4, 4, 0, 0] }} />
-                  <Bar
-                    dataKey="total_revenue"
-                    fill="#20251F"
-                    radius={[4, 4, 0, 0]}
-                    barSize={42}
-                    animationDuration={900}
-                  >
-                    {topProducts.map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? '#E2570F' : '#20251F'} />
-                    ))}
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--muted)" fontSize={10} interval={0} tick={{ fill: 'var(--ink-soft)' }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="var(--muted)" fontSize={11} tickFormatter={v => `$${v}`} tick={{ fill: 'var(--ink-soft)' }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ProductTooltip />} cursor={{ fill: 'rgba(32,37,31,0.05)', radius: [4,4,0,0] }} />
+                  <Bar dataKey="total_revenue" radius={[4,4,0,0]} barSize={42} animationDuration={900}>
+                    {topProducts.map((_, i) => <Cell key={i} fill={i === 0 ? '#E2570F' : 'var(--ink)'} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -348,6 +324,9 @@ export default function Dashboard() {
           <h3 className="chart-title">
             <DollarSign size={18} />
             Gastos por categoría
+            <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--muted)', fontWeight: 400 }}>
+              {prefixToLabel(selectedMonth)}
+            </span>
           </h3>
           <div className="chart-container">
             {expensesBreakdown.length > 0 ? (
@@ -355,29 +334,21 @@ export default function Dashboard() {
                 <PieChart>
                   <Pie
                     data={expensesBreakdown.map(e => ({ ...e, name: getCategoryLabel(e.category) }))}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={3}
-                    dataKey="total"
-                    animationDuration={900}
+                    cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3}
+                    dataKey="total" animationDuration={900}
                   >
                     {expensesBreakdown.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="#FFFFFF" strokeWidth={2} />
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="var(--surface)" strokeWidth={2} />
                     ))}
                   </Pie>
                   <Tooltip content={<PieTooltip />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="square"
-                    iconSize={9}
-                    formatter={(value) => <span style={{ color: '#4C5249', fontSize: '12px' }}>{value}</span>}
+                  <Legend verticalAlign="bottom" iconType="square" iconSize={9}
+                    formatter={value => <span style={{ color: 'var(--ink-soft)', fontSize: '12px' }}>{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="empty-chart">Sin gastos registrados este mes.</div>
+              <div className="empty-chart">Sin gastos en {prefixToLabel(selectedMonth)}.</div>
             )}
           </div>
         </div>
@@ -386,8 +357,7 @@ export default function Dashboard() {
         <div className="chart-card">
           <h3 className="chart-title" style={{ justifyContent: 'space-between', width: '100%', marginBottom: '4px' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShoppingCart size={18} />
-              Ventas recientes
+              <ShoppingCart size={18} />Ventas recientes
             </span>
             <Link to="/ventas" className="chart-link">
               Ver todas <ArrowRight size={14} />
@@ -397,23 +367,17 @@ export default function Dashboard() {
             {recentSales.length > 0 ? (
               <table className="data-table compact">
                 <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                  </tr>
+                  <tr><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th></tr>
                 </thead>
                 <tbody>
-                  {recentSales.map((sale) => (
+                  {recentSales.map(sale => (
                     <tr key={sale.id}>
                       <td className="mono">{formatDate(sale.created_at)}</td>
                       <td>{sale.customer_name || 'Sin cliente'}</td>
                       <td className="money">{formatCurrency(sale.total)}</td>
                       <td>
                         <span className={`badge badge-${sale.status}`}>
-                          <span className="badge-dot" />
-                          {sale.status}
+                          <span className="badge-dot" />{sale.status}
                         </span>
                       </td>
                     </tr>
