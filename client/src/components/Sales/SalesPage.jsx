@@ -2,19 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Search, Edit2, Trash2, ShoppingCart,
   ChevronLeft, ChevronRight, TrendingUp, DollarSign,
-  Clock, CheckCircle, BarChart2,
+  Clock, CheckCircle, BarChart2, FileText,
 } from 'lucide-react';
 import { api } from '../../utils/api.js';
 import { useToast } from '../../App.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 import { SALE_STATUSES, getStatusLabel } from '../../utils/constants.js';
+import { generateReceiptPDF } from '../../utils/receipt.js';
 import Modal from '../UI/Modal.jsx';
 import ConfirmDialog from '../UI/ConfirmDialog.jsx';
 import SaleForm from './SaleForm.jsx';
 
 const PAGE_SIZE = 10;
 
-/* ── Tarjeta de resumen histórico ───────────────────────────── */
 function SummaryCard({ icon: Icon, label, value, color, sub }) {
   return (
     <div className="stat-card" style={{ '--card-accent': color }}>
@@ -46,24 +46,18 @@ export default function SalesPage() {
   const [dateTo, setDateTo]             = useState('');
   const [page, setPage]                 = useState(1);
 
-  const [modalOpen, setModalOpen]       = useState(false);
-  const [editingSale, setEditingSale]   = useState(null);
+  const [modalOpen, setModalOpen]         = useState(false);
+  const [editingSale, setEditingSale]     = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  /* ── Fetch resumen histórico ──────────────────────────────── */
   const fetchSummary = useCallback(async () => {
     try {
       setSummaryLoading(true);
       const res = await api.get('/api/sales/summary');
       setSummary(res?.data || res);
-    } catch (_) {
-      // silencioso: la sección simplemente no aparece
-    } finally {
-      setSummaryLoading(false);
-    }
+    } catch (_) {} finally { setSummaryLoading(false); }
   }, []);
 
-  /* ── Fetch ventas ─────────────────────────────────────────── */
   const fetchSales = useCallback(async () => {
     try {
       const params = new URLSearchParams();
@@ -76,31 +70,23 @@ export default function SalesPage() {
       setSales(Array.isArray(res) ? res : res?.data || res?.sales || []);
     } catch (err) {
       toast.error('Error al cargar ventas');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [statusFilter, search, dateFrom, dateTo]);
 
   const fetchFormData = useCallback(async () => {
     try {
       const [cRes, pRes] = await Promise.allSettled([
-        api.get('/api/customers'),
-        api.get('/api/products'),
+        api.get('/api/customers'), api.get('/api/products'),
       ]);
       if (cRes.status === 'fulfilled') setCustomers(Array.isArray(cRes.value) ? cRes.value : cRes.value?.data || []);
       if (pRes.status === 'fulfilled') setProducts(Array.isArray(pRes.value) ? pRes.value : pRes.value?.data || []);
     } catch (_) {}
   }, []);
 
-  useEffect(() => {
-    fetchSummary();
-    fetchSales();
-    fetchFormData();
-  }, [fetchSummary, fetchSales, fetchFormData]);
-
+  useEffect(() => { fetchSummary(); fetchSales(); fetchFormData(); }, [fetchSummary, fetchSales, fetchFormData]);
   useEffect(() => { setPage(1); }, [statusFilter, search, dateFrom, dateTo]);
 
-  const totalPages   = Math.max(1, Math.ceil(sales.length / PAGE_SIZE));
+  const totalPages     = Math.max(1, Math.ceil(sales.length / PAGE_SIZE));
   const paginatedSales = sales.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleCreate = () => { setEditingSale(null); setModalOpen(true); };
@@ -118,7 +104,7 @@ export default function SalesPage() {
       setModalOpen(false);
       setEditingSale(null);
       fetchSales();
-      fetchSummary(); // refrescar resumen tras nueva venta
+      fetchSummary();
     } catch (err) {
       toast.error(err.message || 'Error al guardar la venta');
       throw err;
@@ -138,9 +124,17 @@ export default function SalesPage() {
     }
   };
 
+  const handleReceipt = (sale) => {
+    try {
+      generateReceiptPDF(sale, 'sale');
+      toast.success('Recibo generado');
+    } catch (err) {
+      toast.error('Error al generar el recibo');
+    }
+  };
+
   return (
     <div className="animate-fadeIn">
-      {/* Header */}
       <div className="page-header">
         <div>
           <h1>Ventas</h1>
@@ -151,7 +145,7 @@ export default function SalesPage() {
         </button>
       </div>
 
-      {/* ── Resumen histórico ──────────────────────────────────── */}
+      {/* Resumen histórico */}
       {!summaryLoading && summary && (
         <div style={{ marginBottom: '28px' }}>
           <h2 style={{
@@ -164,79 +158,41 @@ export default function SalesPage() {
             Histórico total de ventas
           </h2>
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-            <SummaryCard
-              icon={TrendingUp}
-              label="Total recaudado"
-              value={formatCurrency(summary.total_recaudado)}
-              color="#E2570F"
-              sub={`${summary.total_ventas} ventas en total`}
-            />
-            <SummaryCard
-              icon={CheckCircle}
-              label="Cobrado (pagado + entregado)"
-              value={formatCurrency(summary.total_pagado)}
-              color="#2E7D4F"
-              sub={`${summary.total_entregado} entregadas`}
-            />
-            <SummaryCard
-              icon={Clock}
-              label="Por cobrar"
-              value={formatCurrency(summary.total_pendiente)}
-              color="#A66B06"
-              sub="Ventas pendientes"
-            />
-            <SummaryCard
-              icon={DollarSign}
-              label="Ticket promedio"
-              value={formatCurrency(summary.ticket_promedio)}
-              color="#6D4BBE"
-              sub="Excluye canceladas"
-            />
+            <SummaryCard icon={TrendingUp}   label="Total recaudado"           value={formatCurrency(summary.total_recaudado)} color="#E2570F" sub={`${summary.total_ventas} ventas en total`} />
+            <SummaryCard icon={CheckCircle}  label="Cobrado (pagado+entregado)" value={formatCurrency(summary.total_pagado)}    color="#2E7D4F" sub={`${summary.total_entregado} entregadas`} />
+            <SummaryCard icon={Clock}        label="Por cobrar"                  value={formatCurrency(summary.total_pendiente)} color="#A66B06" sub="Ventas pendientes" />
+            <SummaryCard icon={DollarSign}   label="Ticket promedio"             value={formatCurrency(summary.ticket_promedio)} color="#6D4BBE" sub="Excluye canceladas" />
           </div>
         </div>
       )}
-
-      {/* Skeleton del resumen si está cargando */}
       {summaryLoading && (
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '28px' }}>
           {[0,1,2,3].map(i => <div key={i} className="skeleton skeleton-card" />)}
         </div>
       )}
 
-      {/* ── Filtros ────────────────────────────────────────────── */}
+      {/* Filtros */}
       <div className="filter-bar">
         <div className="search-input-wrap">
           <Search />
-          <input
-            className="form-input"
-            placeholder="Buscar por cliente..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <input className="form-input" placeholder="Buscar por cliente..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select
-          className="form-input"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ maxWidth: 180 }}
-        >
+        <select className="form-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ maxWidth: 180 }}>
           <option value="">Todos los estados</option>
-          {SALE_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
+          {SALE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
-        <input type="date" className="form-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ maxWidth: 170 }} />
-        <input type="date" className="form-input" value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   style={{ maxWidth: 170 }} />
+        <input type="date" className="form-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ maxWidth: 170 }} />
+        <input type="date" className="form-input" value={dateTo}   onChange={e => setDateTo(e.target.value)}   style={{ maxWidth: 170 }} />
       </div>
 
-      {/* ── Tabla ─────────────────────────────────────────────── */}
+      {/* Tabla */}
       {loading ? (
         <div className="loading-spinner"><div className="spinner" /></div>
       ) : sales.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon"><ShoppingCart size={36} /></div>
           <h3>Sin ventas</h3>
-          <p>Aún no tienes ventas registradas. Crea tu primera venta para comenzar.</p>
+          <p>Aún no tienes ventas registradas.</p>
           <button className="btn btn-primary" onClick={handleCreate} style={{ marginTop: 16 }}>
             <Plus size={18} /> Nueva Venta
           </button>
@@ -262,26 +218,29 @@ export default function SalesPage() {
                   const itemCount = sale.items?.length || 0;
                   const firstItem = sale.items?.[0];
                   const productDisplay = itemCount > 1
-                    ? `${firstItem?.product?.name || firstItem?.productName || firstItem?.product_name || 'Producto'} +${itemCount - 1}`
-                    : (firstItem?.product?.name || firstItem?.productName || firstItem?.product_name || `${itemCount} producto(s)`);
-
+                    ? `${firstItem?.product_name || 'Producto'} +${itemCount - 1}`
+                    : (firstItem?.product_name || `${itemCount} producto(s)`);
                   return (
                     <tr key={saleId}>
                       <td style={{ color: 'var(--muted)' }}>{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                      <td className="mono">{formatDate(sale.date || sale.createdAt || sale.created_at)}</td>
-                      <td style={{ color: 'var(--ink)', fontWeight: 500 }}>
-                        {sale.customer?.name || sale.customerName || sale.customer_name || '—'}
-                      </td>
+                      <td className="mono">{formatDate(sale.date || sale.created_at)}</td>
+                      <td style={{ color: 'var(--ink)', fontWeight: 500 }}>{sale.customer_name || '—'}</td>
                       <td>{productDisplay}</td>
                       <td className="money">{formatCurrency(sale.total)}</td>
                       <td>
                         <span className={`badge badge-${sale.status}`}>
-                          <span className="badge-dot" />
-                          {getStatusLabel(sale.status)}
+                          <span className="badge-dot" />{getStatusLabel(sale.status)}
                         </span>
                       </td>
                       <td>
                         <div className="action-buttons">
+                          <button className="action-btn" title="Descargar recibo" onClick={() => handleReceipt(sale)}
+                            style={{ color: 'var(--muted)' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-soft)'; e.currentTarget.style.color = 'var(--accent-deep)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--muted)'; }}
+                          >
+                            <FileText size={16} />
+                          </button>
                           <button className="action-btn edit" title="Editar" onClick={() => handleEdit(sale)}>
                             <Edit2 size={16} />
                           </button>
@@ -297,24 +256,18 @@ export default function SalesPage() {
             </table>
           </div>
 
-          {/* Totales de la vista filtrada */}
           {sales.length > 0 && (
             <div style={{
               display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
               gap: '24px', padding: '12px 16px',
-              borderTop: '1px solid var(--line)',
-              background: 'var(--surface-soft)',
+              borderTop: '1px solid var(--line)', background: 'var(--surface-soft)',
               borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
               fontSize: '0.8125rem', color: 'var(--muted)',
             }}>
-              <span>
-                {statusFilter || search || dateFrom || dateTo ? 'Filtrado:' : 'Total:'}{' '}
-                <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
-                  {sales.length} ventas
-                </strong>
+              <span>{statusFilter || search || dateFrom || dateTo ? 'Filtrado:' : 'Total:'}{' '}
+                <strong style={{ color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{sales.length} ventas</strong>
               </span>
-              <span>
-                Suma:{' '}
+              <span>Suma:{' '}
                 <strong style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
                   {formatCurrency(sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0))}
                 </strong>
@@ -324,44 +277,22 @@ export default function SalesPage() {
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button className="pagination-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button key={p} className={`pagination-btn ${p === page ? 'active' : ''}`} onClick={() => setPage(p)}>
-                  {p}
-                </button>
+              <button className="pagination-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <button key={p} className={`pagination-btn ${p === page ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
               ))}
-              <button className="pagination-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                <ChevronRight size={16} />
-              </button>
+              <button className="pagination-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
             </div>
           )}
         </>
       )}
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setEditingSale(null); }}
-        title={editingSale ? 'Editar Venta' : 'Nueva Venta'}
-        size="lg"
-      >
-        <SaleForm
-          sale={editingSale}
-          onSave={handleSave}
-          onCancel={() => { setModalOpen(false); setEditingSale(null); }}
-          customers={customers}
-          products={products}
-        />
+      <Modal isOpen={modalOpen} onClose={() => { setModalOpen(false); setEditingSale(null); }} title={editingSale ? 'Editar Venta' : 'Nueva Venta'} size="lg">
+        <SaleForm sale={editingSale} onSave={handleSave} onCancel={() => { setModalOpen(false); setEditingSale(null); }} customers={customers} products={products} />
       </Modal>
 
-      <ConfirmDialog
-        isOpen={!!deleteConfirm}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteConfirm(null)}
-        title="¿Eliminar venta?"
-        message="Esta venta será eliminada permanentemente. Esta acción no se puede deshacer."
-      />
+      <ConfirmDialog isOpen={!!deleteConfirm} onConfirm={handleDeleteConfirm} onCancel={() => setDeleteConfirm(null)}
+        title="¿Eliminar venta?" message="Esta venta será eliminada permanentemente." />
     </div>
   );
 }

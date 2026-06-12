@@ -22,8 +22,10 @@ import {
   XCircle,
   LayoutGrid,
   List,
-  AlertCircle
+  AlertCircle,
+  FileText,
 } from 'lucide-react';
+import { generateReceiptPDF } from '../../utils/receipt.js';
 import { api } from '../../utils/api.js';
 import { useToast } from '../../App.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -331,6 +333,15 @@ export default function OrdersPage() {
     imprimiendo: filteredOrders.filter(o => o.status === 'imprimiendo'),
     terminado: filteredOrders.filter(o => o.status === 'terminado'),
     entregado: filteredOrders.filter(o => o.status === 'entregado')
+  };
+
+  const handleReceipt = (order) => {
+    try {
+      generateReceiptPDF(order, 'order');
+      toast.success('Recibo generado');
+    } catch (err) {
+      toast.error('Error al generar el recibo');
+    }
   };
 
   return (
