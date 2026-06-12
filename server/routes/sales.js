@@ -5,40 +5,46 @@ const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 router.use(authMiddleware);
 
+/* ── Obtener y reservar el siguiente número de recibo ───────── */
+async function getNextReceiptNumber() {
+  const counterRef = db.collection('counters').doc('sales');
+  let nextNum = 1;
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(counterRef);
+    nextNum = doc.exists ? (doc.data().current || 0) + 1 : 1;
+    tx.set(counterRef, { current: nextNum }, { merge: true });
+  });
+
+  return nextNum;
+}
+
+function formatReceiptNumber(num) {
+  return String(num).padStart(4, '0'); // 0001, 0002, ...
+}
+
 // ──────────────────────────────────────────────
-// GET /api/sales/summary  — totales históricos
+// GET /api/sales/summary
 // ──────────────────────────────────────────────
 router.get('/summary', async (req, res) => {
   try {
     const snapshot = await db.collection('sales').get();
     const sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    const total_ventas     = sales.length;
-    const total_recaudado  = sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
-    const total_pagado     = sales.filter(s => s.status === 'pagado' || s.status === 'entregado')
-                                  .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
-    const total_pendiente  = sales.filter(s => s.status === 'pendiente')
-                                  .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
-    const total_entregado  = sales.filter(s => s.status === 'entregado').length;
-    const total_cancelado  = sales.filter(s => s.status === 'cancelado').length;
-
-    // Ticket promedio (excluyendo canceladas)
-    const validSales = sales.filter(s => s.status !== 'cancelado');
+    const total_ventas    = sales.length;
+    const total_recaudado = sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const total_pagado    = sales.filter(s => s.status === 'pagado' || s.status === 'entregado')
+                                 .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const total_pendiente = sales.filter(s => s.status === 'pendiente')
+                                 .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const total_entregado = sales.filter(s => s.status === 'entregado').length;
+    const total_cancelado = sales.filter(s => s.status === 'cancelado').length;
+    const validSales      = sales.filter(s => s.status !== 'cancelado');
     const ticket_promedio = validSales.length > 0
       ? validSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0) / validSales.length
       : 0;
 
-    res.json({
-      data: {
-        total_ventas,
-        total_recaudado,
-        total_pagado,
-        total_pendiente,
-        total_entregado,
-        total_cancelado,
-        ticket_promedio,
-      }
-    });
+    res.json({ data: { total_ventas, total_recaudado, total_pagado, total_pendiente, total_entregado, total_cancelado, ticket_promedio } });
   } catch (err) {
     console.error('Sales summary error:', err.message);
     res.status(500).json({ error: 'Error al obtener resumen de ventas.' });
@@ -51,25 +57,14 @@ router.get('/summary', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { status, customer_id, from, to, search } = req.query;
-
     const snapshot = await db.collection('sales').orderBy('created_at', 'desc').get();
     let sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     if (status)      sales = sales.filter(s => s.status === status);
     if (customer_id) sales = sales.filter(s => s.customer_id === customer_id);
-    if (from) {
-      const fromDate = new Date(from);
-      sales = sales.filter(s => new Date(s.created_at) >= fromDate);
-    }
-    if (to) {
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59, 999);
-      sales = sales.filter(s => new Date(s.created_at) <= toDate);
-    }
-    if (search) {
-      const term = search.toLowerCase().trim();
-      sales = sales.filter(s => s.customer_name && s.customer_name.toLowerCase().includes(term));
-    }
+    if (from) { const d = new Date(from); sales = sales.filter(s => new Date(s.created_at) >= d); }
+    if (to)   { const d = new Date(to); d.setHours(23,59,59,999); sales = sales.filter(s => new Date(s.created_at) <= d); }
+    if (search) { const t = search.toLowerCase(); sales = sales.filter(s => s.customer_name?.toLowerCase().includes(t)); }
 
     res.json({ data: sales });
   } catch (err) {
@@ -93,7 +88,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// POST /api/sales
+// POST /api/sales  — asigna número consecutivo
 // ──────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
@@ -123,19 +118,28 @@ router.post('/', async (req, res) => {
       resolvedItems.push({ product_id: item.product_id, product_name: productName, quantity: Number(item.quantity), unit_price: Number(item.unit_price), subtotal });
 
       if (productDoc.exists) {
-        const prodData = productDoc.data();
-        const newStock = Math.max(0, (Number(prodData.stock) || 0) - Number(item.quantity));
+        const newStock = Math.max(0, (Number(productDoc.data().stock) || 0) - Number(item.quantity));
         await db.collection('products').doc(item.product_id).update({ stock: newStock });
       }
     }
 
     total = Math.max(0, total - Number(discount));
 
+    // ── Número consecutivo ────────────────────
+    const receiptNum = await getNextReceiptNumber();
+    const receipt_number = formatReceiptNumber(receiptNum);
+
     const newSale = {
-      customer_id: customer_id || null, customer_name: customerName,
-      total: Number(total), discount: Number(discount) || 0,
-      status, notes: notes || '', items: resolvedItems,
-      created_at: new Date().toISOString()
+      customer_id: customer_id || null,
+      customer_name: customerName,
+      total: Number(total),
+      discount: Number(discount) || 0,
+      status,
+      notes: notes || '',
+      items: resolvedItems,
+      receipt_number,        // ← "0001", "0002"...
+      receipt_seq: receiptNum, // número entero para ordenar
+      created_at: new Date().toISOString(),
     };
 
     const docRef = await db.collection('sales').add(newSale);
@@ -180,8 +184,8 @@ router.put('/:id', async (req, res) => {
       updatedSale = { customer_id: customer_id || null, customer_name: customerName, total: Number(total), discount: Number(discount) || 0, status, notes: notes || '', items: resolvedItems };
     } else {
       const itemsList = existing.items || [];
-      let total = Math.max(0, itemsList.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0) - Number(discount));
-      updatedSale = { customer_id: customer_id || null, customer_name: customerName, discount: Number(discount) || 0, total: Number(total), status, notes: notes || '' };
+      const total = Math.max(0, itemsList.reduce((sum, i) => sum + (Number(i.subtotal) || 0), 0) - Number(discount));
+      updatedSale = { customer_id: customer_id || null, customer_name: customerName, discount: Number(discount) || 0, total, status, notes: notes || '' };
     }
 
     await docRef.update(updatedSale);

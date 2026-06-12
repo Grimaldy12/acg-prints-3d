@@ -26,9 +26,10 @@ function formatDateStr(str) {
   return d.toLocaleDateString('es-PA', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-function receiptNumber(id) {
-  if (!id) return 'N/A';
-  return `#${String(id).slice(-6).toUpperCase()}`;
+function receiptNumber(data) {
+  if (data.receipt_number) return `#${data.receipt_number}`;
+  if (data.id) return `#${String(data.id).slice(-6).toUpperCase()}`;
+  return '#N/A';
 }
 
 /* ── Función principal ──────────────────────────────────────── */
@@ -82,7 +83,7 @@ export function generateReceiptPDF(data, type = 'sale') {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(255, 220, 190);
-  doc.text(receiptNumber(data.id), W - M, 17, { align: 'right' });
+  doc.text(receiptNumber(data), W - M, 17, { align: 'right' });
 
   y = 36;
 
@@ -258,6 +259,7 @@ export function generateReceiptPDF(data, type = 'sale') {
   doc.text(`Generado el ${new Date().toLocaleDateString('es-PA')}`, W / 2, H - 8, { align: 'center' });
 
   // ── Guardar ────────────────────────────────────────────────
-  const filename = `recibo_${type === 'order' ? 'pedido' : 'venta'}_${receiptNumber(data.id).replace('#','')}.pdf`;
+  const num = data.receipt_number || String(data.id || '').slice(-6).toUpperCase();
+  const filename = `recibo_${type === 'order' ? 'pedido' : 'venta'}_${num}.pdf`;
   doc.save(filename);
 }

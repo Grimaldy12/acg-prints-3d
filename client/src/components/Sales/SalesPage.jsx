@@ -204,6 +204,7 @@ export default function SalesPage() {
               <thead>
                 <tr>
                   <th>#</th>
+                  <th>Recibo</th>
                   <th>Fecha</th>
                   <th>Cliente</th>
                   <th>Productos</th>
@@ -223,6 +224,7 @@ export default function SalesPage() {
                   return (
                     <tr key={saleId}>
                       <td style={{ color: 'var(--muted)' }}>{(page - 1) * PAGE_SIZE + idx + 1}</td>
+                      <td className="mono" style={{ color: 'var(--accent-deep)', fontWeight: 600 }}>{sale.receipt_number ? `#${sale.receipt_number}` : '—'}</td>
                       <td className="mono">{formatDate(sale.date || sale.created_at)}</td>
                       <td style={{ color: 'var(--ink)', fontWeight: 500 }}>{sale.customer_name || '—'}</td>
                       <td>{productDisplay}</td>
