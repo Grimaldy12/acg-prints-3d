@@ -54,7 +54,7 @@ router.get('/:id', async (req, res) => {
 // ──────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { name, description, category, material_cost, print_time_minutes, sale_price, stock, weight_g } = req.body;
+    const { name, description, category, material_cost, print_time_minutes, sale_price, stock, weight_g, extras, total_cost } = req.body;
 
     if (!name || sale_price == null) {
       return res.status(400).json({ error: 'Los campos name y sale_price son obligatorios.' });
@@ -69,6 +69,8 @@ router.post('/', async (req, res) => {
       sale_price: Number(sale_price),
       stock: Number(stock) || 0,
       weight_g: Number(weight_g) || 0,
+      extras: Array.isArray(extras) ? extras : [],
+      total_cost: Number(total_cost) || Number(material_cost) || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -104,6 +106,8 @@ router.put('/:id', async (req, res) => {
       sale_price = existing.sale_price,
       stock = existing.stock,
       weight_g = existing.weight_g,
+      extras = existing.extras,
+      total_cost = existing.total_cost,
     } = req.body;
 
     const updatedProduct = {
@@ -115,6 +119,8 @@ router.put('/:id', async (req, res) => {
       sale_price: Number(sale_price),
       stock: Number(stock) || 0,
       weight_g: Number(weight_g) || 0,
+      extras: Array.isArray(extras) ? extras : (existing.extras || []),
+      total_cost: Number(total_cost) || Number(material_cost) || 0,
       updated_at: new Date().toISOString()
     };
 
