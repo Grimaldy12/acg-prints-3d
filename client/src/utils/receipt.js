@@ -93,7 +93,7 @@ export function generateReceiptPDF(data, type = 'sale') {
   // ── Contacto ─────────────────────────────────────────────────
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(...B.muted);
+  doc.setTextColor(100, 110, 130);
   doc.text('Tel: 6219-9471   ·   Instagram: @acgprints3d', M, y);
   y += 6;
 
@@ -108,17 +108,18 @@ export function generateReceiptPDF(data, type = 'sale') {
 
   doc.setFont('Roboto', 'bold');
   doc.setFontSize(7);
-  doc.setTextColor(...B.muted);
+  doc.setTextColor(120, 130, 150);
   doc.text('CLIENTE', M, y);
   doc.text('FECHA', W - M, y, { align: 'right' });
 
   y += 5;
   doc.setFont('Roboto', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(...B.ink);
+  doc.setTextColor(...B.dark);
   doc.text(clientName, M, y);
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(9);
+  doc.setTextColor(40, 50, 70);
   doc.text(dateStr, W - M, y, { align: 'right' });
   y += 9;
 
@@ -126,7 +127,7 @@ export function generateReceiptPDF(data, type = 'sale') {
   if (data.notes) {
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(...B.muted);
+    doc.setTextColor(100, 110, 130);
     const lines = doc.splitTextToSize(`Nota: ${data.notes}`, W - M * 2);
     doc.text(lines, M, y);
     y += lines.length * 4.5 + 3;
@@ -166,13 +167,13 @@ export function generateReceiptPDF(data, type = 'sale') {
 
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(...B.ink);
+    doc.setTextColor(20, 30, 50);
     const nl = doc.splitTextToSize(name, W - M * 2 - 50);
     doc.text(nl, M + 2, y + 4.5);
-    doc.setTextColor(...B.muted);
+    doc.setTextColor(100, 110, 130);
     doc.text(String(qty),   W - M - 30, y + 4.5, { align: 'right' });
     doc.text(fmt(price),    W - M - 13, y + 4.5, { align: 'right' });
-    doc.setTextColor(...B.ink);
+    doc.setTextColor(20, 30, 50);
     doc.text(fmt(subtotal), W - M,      y + 4.5, { align: 'right' });
 
     y += Math.max(nl.length * 5.5, 8);
@@ -223,7 +224,7 @@ export function generateReceiptPDF(data, type = 'sale') {
   // ── Pie ───────────────────────────────────────────────────────
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(...B.muted);
+  doc.setTextColor(100, 110, 130);
   doc.text('¡Gracias por tu compra! · @acgprints3d', W / 2, y, { align: 'center' });
   y += 5;
   doc.setFontSize(7);
