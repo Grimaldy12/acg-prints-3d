@@ -46,10 +46,10 @@ export function generateReceiptPDF(data, type = 'sale') {
     const subtotal = Number(item.subtotal || qty * price);
     return `
       <tr style="background:${i%2===0?'#12161f':'transparent'}">
-        <td style="padding:8px 10px;color:#e6eaf5;font-size:12px">${name}</td>
-        <td style="padding:8px 10px;color:#8c94a0;font-size:12px;text-align:center">${qty}</td>
-        <td style="padding:8px 10px;color:#8c94a0;font-size:12px;text-align:right">${fmt(price)}</td>
-        <td style="padding:8px 10px;color:#e6eaf5;font-size:12px;text-align:right;font-weight:600">${fmt(subtotal)}</td>
+        <td style="padding:10px 12px;color:#e6eaf5;font-size:12px">${name}</td>
+        <td style="padding:10px 12px;color:#8c94a0;font-size:12px;text-align:center">${qty}</td>
+        <td style="padding:10px 12px;color:#8c94a0;font-size:12px;text-align:right">${fmt(price)}</td>
+        <td style="padding:10px 12px;color:#e6eaf5;font-size:12px;text-align:right;font-weight:600">${fmt(subtotal)}</td>
       </tr>`;
   }).join('');
 
@@ -95,35 +95,43 @@ export function generateReceiptPDF(data, type = 'sale') {
       min-height:210mm;
       margin:0 auto;
       background:#0a0c12;
-      position:relative;
     }
     @media print {
-      html,body { background:#0a0c12 !important; }
-      .page { width:100%; margin:0; box-shadow:none; }
-      .no-print { display:none; }
+      html,body { background:#0a0c12 !important; margin:0; padding:0; }
+      .page { width:100%; margin:0; }
+      .no-print { display:none !important; }
     }
-    /* Botón de descarga (solo en pantalla) */
-    .print-btn {
-      display:block;
-      margin:16px auto;
-      padding:10px 28px;
-      background:#2979ff;
-      color:#fff;
-      border:none;
-      border-radius:6px;
-      font-size:14px;
-      font-weight:600;
-      cursor:pointer;
-      font-family:inherit;
+    @media screen {
+      body { padding: 20px 0; }
+      .print-bar {
+        width:148mm;
+        margin:0 auto 12px;
+        display:flex;
+        justify-content:center;
+      }
+      .print-btn {
+        padding:10px 32px;
+        background:#2979ff;
+        color:#fff;
+        border:none;
+        border-radius:6px;
+        font-size:14px;
+        font-weight:600;
+        cursor:pointer;
+        font-family:inherit;
+        letter-spacing:0.3px;
+      }
+      .print-btn:hover { background:#1565c0; }
     }
-    .print-btn:hover { background:#1565c0; }
   </style>
 </head>
 <body>
-  <button class="print-btn no-print" onclick="window.print()">⬇ Descargar / Imprimir PDF</button>
+  <div class="print-bar no-print">
+    <button class="print-btn" onclick="window.print()">⬇ Guardar como PDF</button>
+  </div>
   <div class="page">
     <!-- Encabezado -->
-    <div style="background:#12183a;border-left:5px solid #2979ff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start">
+    <div style="background:#12183a;border-left:5px solid #2979ff;padding:22px 22px;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <div style="font-size:17px;font-weight:800;color:#ffffff;letter-spacing:-0.3px">ACG PRINTS 3D</div>
         <div style="font-size:9px;color:#8c9bc0;margin-top:3px;font-weight:500">${BUSINESS.tagline}</div>
@@ -138,12 +146,12 @@ export function generateReceiptPDF(data, type = 'sale') {
     <div style="height:2px;background:linear-gradient(90deg,#2979ff,#1a237e)"></div>
 
     <!-- Contacto -->
-    <div style="padding:10px 20px;border-bottom:1px solid #1e2535">
+    <div style="padding:12px 22px;border-bottom:1px solid #1e2535">
       <span style="font-size:10px;color:#8c94a0">Tel: ${BUSINESS.phone} &nbsp;·&nbsp; Instagram: ${BUSINESS.instagram}</span>
     </div>
 
     <!-- Cliente + Fecha -->
-    <div style="padding:14px 20px;display:flex;justify-content:space-between;border-bottom:1px solid #1e2535">
+    <div style="padding:18px 22px;display:flex;justify-content:space-between;border-bottom:1px solid #1e2535">
       <div>
         <div style="font-size:9px;font-weight:700;color:#8c94a0;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Cliente</div>
         <div style="font-size:13px;font-weight:700;color:#ffffff">${clientName}</div>
@@ -155,16 +163,16 @@ export function generateReceiptPDF(data, type = 'sale') {
     </div>
 
     <!-- Notas -->
-    ${notesHTML ? `<div style="padding:8px 20px 0;border-bottom:1px solid #1e2535">${notesHTML}</div>` : ''}
+    ${notesHTML ? `<div style="padding:10px 22px 12px;border-bottom:1px solid #1e2535">${notesHTML}</div>` : ''}
 
     <!-- Tabla -->
     <table style="width:100%;border-collapse:collapse">
       <thead>
         <tr style="background:#12183a">
-          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:left">Producto / Descripción</th>
-          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:center">Cant</th>
-          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">P.Unit</th>
-          <th style="padding:8px 10px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">Subtotal</th>
+          <th style="padding:10px 12px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:left">Producto / Descripción</th>
+          <th style="padding:10px 12px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:center">Cant</th>
+          <th style="padding:10px 12px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">P.Unit</th>
+          <th style="padding:10px 12px;font-size:9px;font-weight:700;color:#2979ff;text-transform:uppercase;letter-spacing:1px;text-align:right">Subtotal</th>
         </tr>
       </thead>
       <tbody>${itemsHTML}</tbody>
@@ -173,7 +181,7 @@ export function generateReceiptPDF(data, type = 'sale') {
         ${depositRows}
         <tr>
           <td colspan="4" style="padding:0">
-            <div style="background:#2979ff;padding:10px 10px;display:flex;justify-content:space-between;align-items:center">
+            <div style="background:#2979ff;padding:14px 14px;display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:1px">TOTAL</span>
               <span style="font-size:16px;font-weight:800;color:#fff">${fmt(data.total)}</span>
             </div>
@@ -183,13 +191,12 @@ export function generateReceiptPDF(data, type = 'sale') {
     </table>
 
     <!-- Pie -->
-    <div style="margin-top:auto;padding:14px 20px;text-align:center;border-top:1px solid #1e2535">
+    <div style="margin-top:auto;padding:20px 22px;text-align:center;border-top:1px solid #1e2535">
       <div style="font-size:10px;color:#8c94a0">¡Gracias por tu compra! · acgprints3d</div>
       <div style="font-size:9px;color:#4a5060;margin-top:3px">Generado el ${new Date().toLocaleDateString('es-PA')}</div>
     </div>
     <div style="height:5px;background:linear-gradient(90deg,#2979ff,#1a237e)"></div>
   </div>
-  <button class="print-btn no-print" onclick="window.print()" style="margin-bottom:24px">⬇ Descargar / Imprimir PDF</button>
 </body>
 </html>`;
 
