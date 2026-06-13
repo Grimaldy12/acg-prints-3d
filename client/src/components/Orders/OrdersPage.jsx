@@ -262,7 +262,8 @@ export default function OrdersPage() {
       ) : viewType === 'board' ? (
 
         /* ── KANBAN ─────────────────────────────────────────── */
-        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 16, minHeight: 400 }}>
+        <div style={{ margin: '0 -16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10, alignItems: 'start', padding: '0 16px' }}>
           {ORDER_STATUSES.map(col => {
             const colOrders = columns[col.value] || [];
             return (
@@ -272,15 +273,13 @@ export default function OrdersPage() {
                 borderTop: `3px solid ${col.color}`,
                 borderRadius: 'var(--radius-lg)',
                 overflow: 'hidden',
-                flex: '1 1 0',
-                minWidth: 260,
-                maxWidth: 360,
+                minWidth: 0,
               }}>
                 {/* Cabecera columna */}
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 14px', borderBottom: '1px solid var(--line)',
-                  background: 'var(--surface-soft)',
+                  padding: '10px 12px', borderBottom: '1px solid var(--line)',
+                  background: 'var(--surface)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.07em', color: col.color }}>
                     {STATUS_ICONS[col.value]}
@@ -292,7 +291,7 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Tarjetas */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 10, maxHeight: '70vh', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 8, maxHeight: '72vh', overflowY: 'auto' }}>
                   {colOrders.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--faint)', fontSize: '0.8rem' }}>
                       Sin pedidos
@@ -309,12 +308,12 @@ export default function OrdersPage() {
                         style={{
                           background: 'var(--surface)',
                           border: '1px solid var(--line)',
-                          borderRadius: 'var(--radius-md)',
-                          padding: '12px 14px',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '10px 12px',
                           cursor: 'pointer',
-                          transition: 'all 0.18s',
-                          display: 'flex', flexDirection: 'column', gap: 8,
-                          boxShadow: 'var(--shadow-sm)',
+                          transition: 'all 0.15s',
+                          display: 'flex', flexDirection: 'column', gap: 6,
+                          boxShadow: 'none',
                         }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = col.color; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
@@ -322,7 +321,7 @@ export default function OrdersPage() {
                         {/* Cliente */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--ink)' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--ink)' }}>
                               {order.customer_name || 'Sin cliente'}
                             </div>
                             {order.customer_phone && (
@@ -347,7 +346,7 @@ export default function OrdersPage() {
 
                         {/* Descripción */}
                         {order.description && (
-                          <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', lineHeight: 1.4, fontWeight: 500 }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', lineHeight: 1.35, fontWeight: 500 }}>
                             {order.description}
                           </div>
                         )}
@@ -370,7 +369,7 @@ export default function OrdersPage() {
                         {/* Dinero */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px dashed var(--line)' }}>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
                               {formatCurrency(order.total_price)}
                             </div>
                             {order.deposit > 0 && (
@@ -455,7 +454,7 @@ export default function OrdersPage() {
             );
           })}
         </div>
-
+        </div>
       ) : (
         /* ── LISTA ──────────────────────────────────────────── */
         <div className="table-container animate-fadeIn">
