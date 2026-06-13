@@ -262,7 +262,7 @@ export default function OrdersPage() {
       ) : viewType === 'board' ? (
 
         /* ── KANBAN ─────────────────────────────────────────── */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, alignItems: 'start', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', overflowX: 'auto', paddingBottom: 16, minHeight: 400 }}>
           {ORDER_STATUSES.map(col => {
             const colOrders = columns[col.value] || [];
             return (
@@ -272,7 +272,9 @@ export default function OrdersPage() {
                 borderTop: `3px solid ${col.color}`,
                 borderRadius: 'var(--radius-lg)',
                 overflow: 'hidden',
-                minWidth: 240,
+                flex: '1 1 0',
+                minWidth: 260,
+                maxWidth: 360,
               }}>
                 {/* Cabecera columna */}
                 <div style={{
