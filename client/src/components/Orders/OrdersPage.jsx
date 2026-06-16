@@ -161,8 +161,10 @@ export default function OrdersPage() {
   const handleItemPriceChange = (i, v) => { const u = [...orderItems]; u[i].unit_price = Number(v)||0; setOrderItems(u); recalc(u); };
   const recalc = (items) => setTotalPrice(items.reduce((s, it) => s + (it.product_id ? it.quantity * it.unit_price : 0), 0));
 
-  const getDeadlineInfo = (dl) => {
+  const getDeadlineInfo = (dl, status) => {
     if (!dl) return { label: 'Sin fecha', cls: 'normal' };
+    // Si ya fue entregado, no mostrar como atrasado
+    if (status === 'entregado') return { label: 'Entregado', cls: 'normal' };
     const d = new Date(dl); d.setHours(0,0,0,0);
     const t = new Date(); t.setHours(0,0,0,0);
     const days = Math.round((d - t) / 86400000);
@@ -297,7 +299,7 @@ export default function OrdersPage() {
                       Sin pedidos
                     </div>
                   ) : colOrders.map(order => {
-                    const dl = getDeadlineInfo(order.deadline);
+                    const dl = getDeadlineInfo(order.deadline, order.status);
                     const balance = (order.total_price || 0) - (order.deposit || 0);
                     const waReg = getWhatsAppLink(order, 'registered');
                     const waFin = getWhatsAppLink(order, 'finished');
@@ -474,7 +476,7 @@ export default function OrdersPage() {
             <tbody>
               {filteredOrders.map(order => {
                 const balance = (order.total_price||0) - (order.deposit||0);
-                const dl = getDeadlineInfo(order.deadline);
+                const dl = getDeadlineInfo(order.deadline, order.status);
                 return (
                   <tr key={order.id || order._id} onClick={() => handleEdit(order)} style={{ cursor: 'pointer' }}>
                     <td>
