@@ -167,4 +167,91 @@ router.get('/recent-sales', async (req, res) => {
   }
 });
 
+
+// ──────────────────────────────────────────────
+// GET /api/dashboard/finance?months=12
+// Datos completos para la página de Finanzas
+// ──────────────────────────────────────────────
+router.get('/finance', async (req, res) => {
+  try {
+    const numMonths = Math.min(parseInt(req.query.months) || 12, 24);
+    const now = new Date();
+
+    // Generar lista de meses
+    const months = [];
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+
+    const [salesSnap, expensesSnap] = await Promise.all([
+      db.collection('sales').get(),
+      db.collection('expenses').get(),
+    ]);
+
+    const sales    = salesSnap.docs.map(d => d.data());
+    const expenses = expensesSnap.docs.map(d => d.data());
+
+    // Agregar por mes
+    const byMonth = {};
+    months.forEach(m => { byMonth[m] = { sales: 0, expenses: 0, profit: 0, sales_count: 0 }; });
+
+    sales.forEach(s => {
+      if (s.status === 'cancelado' || !s.created_at) return;
+      const m = getYearMonthPrefix(s.created_at);
+      if (byMonth[m]) {
+        byMonth[m].sales       += Number(s.total) || 0;
+        byMonth[m].sales_count += 1;
+      }
+    });
+
+    expenses.forEach(e => {
+      if (!e.date) return;
+      const m = getYearMonthPrefix(e.date);
+      if (byMonth[m]) byMonth[m].expenses += Number(e.amount) || 0;
+    });
+
+    const chart = months.map(m => ({
+      month: m,
+      sales:    Math.round(byMonth[m].sales    * 100) / 100,
+      expenses: Math.round(byMonth[m].expenses * 100) / 100,
+      profit:   Math.round((byMonth[m].sales - byMonth[m].expenses) * 100) / 100,
+      sales_count: byMonth[m].sales_count,
+    }));
+
+    // Totales históricos
+    const totalSales    = sales.filter(s => s.status !== 'cancelado').reduce((sum, s) => sum + (Number(s.total)||0), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount)||0), 0);
+    const totalProfit   = totalSales - totalExpenses;
+
+    // Mejor mes
+    const bestMonth = chart.reduce((best, m) => m.sales > (best?.sales || 0) ? m : best, null);
+
+    // Gastos por categoría (histórico)
+    const catAgg = {};
+    expenses.forEach(e => {
+      catAgg[e.category] = (catAgg[e.category] || 0) + (Number(e.amount)||0);
+    });
+    const expensesByCategory = Object.entries(catAgg)
+      .map(([category, total]) => ({ category, total: Math.round(total*100)/100 }))
+      .sort((a, b) => b.total - a.total);
+
+    res.json({
+      data: {
+        chart,
+        totals: {
+          sales:    Math.round(totalSales    * 100) / 100,
+          expenses: Math.round(totalExpenses * 100) / 100,
+          profit:   Math.round(totalProfit   * 100) / 100,
+        },
+        best_month: bestMonth,
+        expenses_by_category: expensesByCategory,
+      }
+    });
+  } catch (err) {
+    console.error('Finance error:', err.message);
+    res.status(500).json({ error: 'Error al obtener datos financieros.' });
+  }
+});
+
 module.exports = router;

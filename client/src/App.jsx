@@ -12,6 +12,7 @@ import ExpensesPage from './components/Expenses/ExpensesPage.jsx';
 import OrdersPage from './components/Orders/OrdersPage.jsx';
 import ReportsPage from './components/Reports/ReportsPage.jsx';
 import OrderForm from './components/Public/OrderForm.jsx';
+import FinancePage from './components/Finance/FinancePage.jsx';
 import Toast from './components/UI/Toast.jsx';
 
 // ── Auth Context ─────────────────────────────────────────────
@@ -141,6 +142,7 @@ export default function App() {
               <Route path="gastos" element={<ExpensesPage />} />
               <Route path="pedidos" element={<OrdersPage />} />
               <Route path="reportes" element={<ReportsPage />} />
+              <Route path="finanzas" element={<FinancePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Printer, LayoutDashboard, ShoppingCart, Package,
-  Users, Receipt, LogOut, ClipboardList, Sun, Moon, FileSpreadsheet,
+  Users, Receipt, LogOut, ClipboardList, Sun, Moon, FileSpreadsheet, TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../../App.jsx';
 import { useTheme } from '../../App.jsx';
