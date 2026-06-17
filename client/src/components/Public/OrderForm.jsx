@@ -2,7 +2,7 @@
    ACG PRINTS 3D — Formulario público de pedidos
    ============================================================ */
 import { useState } from 'react';
-import { Package, User, Phone, CreditCard, Truck, Palette, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Package, User, Phone, CreditCard, Truck, Hash, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 
 const SHIPPING = ['Ferguson', 'Uno Express', 'Retiro en punto de encuentro'];
 
@@ -14,7 +14,7 @@ export default function OrderForm() {
   const [form, setForm] = useState({
     customer_name: '', customer_lastname: '', customer_phone: '',
     customer_cedula: '', customer_company: '',
-    product_name: '', product_color: '', description: '',
+    product_name: '', product_quantity: '', description: '',
   });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -42,7 +42,7 @@ export default function OrderForm() {
 
   const resetForm = () => {
     setStep('form');
-    setForm({ customer_name:'', customer_lastname:'', customer_phone:'', customer_cedula:'', customer_company:'', product_name:'', product_color:'', description:'' });
+    setForm({ customer_name:'', customer_lastname:'', customer_phone:'', customer_cedula:'', customer_company:'', product_name:'', product_quantity:'', description:'' });
   };
 
   if (step === 'success') {
@@ -61,7 +61,7 @@ export default function OrderForm() {
               <div className="pf-summary">
                 <SummaryRow label="Nombre" value={`${form.customer_name} ${form.customer_lastname}`} />
                 <SummaryRow label="Producto" value={form.product_name} />
-                {form.product_color && <SummaryRow label="Color" value={form.product_color} />}
+                {form.product_quantity && <SummaryRow label="Cantidad" value={form.product_quantity} />}
                 <SummaryRow label="Envío" value={form.customer_company} />
               </div>
               <button className="pf-btn-secondary" onClick={resetForm}>Hacer otro pedido</button>
@@ -129,12 +129,12 @@ export default function OrderForm() {
                 <input className="pf-input" type="text" placeholder="Ej. Dispensador de Gillette, Maceta hexagonal..." value={form.product_name} onChange={e => set('product_name', e.target.value)} required />
               </Field>
 
-              <Field label="Color del producto">
-                <input className="pf-input" type="text" placeholder="Ej. Negro, Rojo, Azul marino..." value={form.product_color} onChange={e => set('product_color', e.target.value)} />
+              <Field label="Cantidad *">
+                <input className="pf-input" type="number" placeholder="Ej. 1, 2, 5..." min="1" value={form.product_quantity} onChange={e => set('product_quantity', e.target.value)} required />
               </Field>
 
               <Field label="Detalles adicionales">
-                <textarea className="pf-input pf-textarea" placeholder="Cantidad, medidas, referencias, cualquier detalle importante..." value={form.description} onChange={e => set('description', e.target.value)} rows={3} />
+                <textarea className="pf-input pf-textarea" placeholder="Color deseado, medidas, referencias de imagen, cualquier detalle importante..." value={form.description} onChange={e => set('description', e.target.value)} rows={3} />
               </Field>
 
               {!form.customer_company && (

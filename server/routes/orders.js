@@ -13,7 +13,7 @@ router.post('/public', async (req, res) => {
     const {
       customer_name, customer_lastname, customer_phone,
       customer_cedula, customer_company,
-      product_name, product_color, description,
+      product_name, product_quantity, description,
     } = req.body;
 
     if (!customer_name || !customer_phone || !product_name) {
@@ -22,6 +22,13 @@ router.post('/public', async (req, res) => {
 
     const fullName = `${customer_name.trim()} ${(customer_lastname||'').trim()}`.trim();
 
+    const descriptionText = [
+      product_name   ? `Producto: ${product_name}` : '',
+      product_quantity ? `Cantidad: ${product_quantity}` : '',
+      customer_company ? `Envío: ${customer_company}` : '',
+      description    ? `Detalles: ${description}` : '',
+    ].filter(Boolean).join(' | ');
+
     const newOrder = {
       customer_id: null,
       customer_name: fullName,
@@ -29,13 +36,9 @@ router.post('/public', async (req, res) => {
       customer_cedula: customer_cedula || '',
       customer_company: customer_company || '',
       items: [],
-      description: [
-        product_name ? `Producto: ${product_name}` : '',
-        product_color ? `Color: ${product_color}` : '',
-        description ? `Detalles: ${description}` : '',
-      ].filter(Boolean).join(' | '),
+      description: descriptionText,
       product_name: product_name || '',
-      product_color: product_color || '',
+      product_quantity: product_quantity || '',
       total_price: 0,
       deposit: 0,
       balance_due: 0,
@@ -46,6 +49,50 @@ router.post('/public', async (req, res) => {
     };
 
     const docRef = await db.collection('orders').add(newOrder);
+
+    // ── Notificación por email via Resend ─────────────────────
+    try {
+      const RESEND_KEY = process.env.RESEND_API_KEY;
+      if (RESEND_KEY) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${RESEND_KEY}`,
+          },
+          body: JSON.stringify({
+            from: 'ACG PRINTS 3D <noreply@acgprints3d.com>',
+            to: ['acg3dprints@outlook.com'],
+            subject: `🖨️ Nuevo pedido de ${fullName}`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                <div style="background:#12181F;padding:16px 20px;border-radius:8px 8px 0 0;border-bottom:3px solid #E2570F">
+                  <h2 style="color:#fff;margin:0;font-size:1.1rem">ACG PRINTS 3D — Nuevo Pedido</h2>
+                </div>
+                <div style="background:#f9f9f7;border:1px solid #e0e0d8;border-top:none;padding:20px;border-radius:0 0 8px 8px">
+                  <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+                    <tr><td style="padding:6px 0;color:#79806F;font-weight:600;width:140px">Cliente</td><td style="color:#20251F;font-weight:700">${fullName}</td></tr>
+                    <tr><td style="padding:6px 0;color:#79806F;font-weight:600">Teléfono</td><td style="color:#20251F">${customer_phone}</td></tr>
+                    ${customer_cedula ? `<tr><td style="padding:6px 0;color:#79806F;font-weight:600">Cédula</td><td style="color:#20251F">${customer_cedula}</td></tr>` : ''}
+                    <tr><td style="padding:6px 0;color:#79806F;font-weight:600">Producto</td><td style="color:#20251F;font-weight:700">${product_name}</td></tr>
+                    ${product_quantity ? `<tr><td style="padding:6px 0;color:#79806F;font-weight:600">Cantidad</td><td style="color:#20251F">${product_quantity}</td></tr>` : ''}
+                    ${customer_company ? `<tr><td style="padding:6px 0;color:#79806F;font-weight:600">Envío</td><td style="color:#20251F">${customer_company}</td></tr>` : ''}
+                    ${description ? `<tr><td style="padding:6px 0;color:#79806F;font-weight:600;vertical-align:top">Detalles</td><td style="color:#20251F">${description}</td></tr>` : ''}
+                  </table>
+                  <div style="margin-top:16px;padding:12px;background:#FBEADF;border-radius:6px;text-align:center">
+                    <span style="color:#E2570F;font-weight:700;font-size:0.85rem">El pedido ya aparece en tu kanban en estado "En Cola"</span>
+                  </div>
+                </div>
+              </div>
+            `,
+          }),
+        });
+      }
+    } catch (emailErr) {
+      console.error('Email notification error:', emailErr.message);
+      // No fallar el pedido si el email falla
+    }
+
     res.status(201).json({ data: { id: docRef.id, customer_name: fullName } });
   } catch (err) {
     console.error('Public order error:', err.message);
