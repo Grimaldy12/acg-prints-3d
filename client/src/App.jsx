@@ -11,6 +11,7 @@ import CustomersPage from './components/Customers/CustomersPage.jsx';
 import ExpensesPage from './components/Expenses/ExpensesPage.jsx';
 import OrdersPage from './components/Orders/OrdersPage.jsx';
 import ReportsPage from './components/Reports/ReportsPage.jsx';
+import OrderForm from './components/Public/OrderForm.jsx';
 import Toast from './components/UI/Toast.jsx';
 
 // ── Auth Context ─────────────────────────────────────────────
@@ -122,6 +123,7 @@ export default function App() {
       <ToastContext.Provider value={toastValue}>
         <ThemeContext.Provider value={themeValue}>
           <Routes>
+            <Route path="/pedido" element={<OrderForm />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
