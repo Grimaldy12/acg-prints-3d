@@ -48,6 +48,32 @@ router.post('/public', async (req, res) => {
       created_at: new Date().toISOString(),
     };
 
+    // ── Crear cliente automáticamente si no existe ──────────────
+    let newCustomerId = null;
+    try {
+      const existingCustomers = await db.collection('customers')
+        .where('phone', '==', customer_phone.trim()).get();
+
+      if (existingCustomers.empty) {
+        const customerRef = await db.collection('customers').add({
+          name:       fullName,
+          phone:      customer_phone.trim(),
+          cedula:     customer_cedula || '',
+          instagram:  '',
+          email:      '',
+          notes:      `Cliente registrado via portal web`,
+          created_at: new Date().toISOString(),
+        });
+        newCustomerId = customerRef.id;
+      } else {
+        newCustomerId = existingCustomers.docs[0].id;
+      }
+      // Actualizar el pedido con el customer_id
+      newOrder.customer_id = newCustomerId;
+    } catch (customerErr) {
+      console.error('Auto-create customer error:', customerErr.message);
+    }
+
     const docRef = await db.collection('orders').add(newOrder);
 
     // ── Notificación por email via Resend ─────────────────────
