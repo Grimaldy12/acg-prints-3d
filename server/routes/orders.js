@@ -13,14 +13,27 @@ router.post('/public', async (req, res) => {
     const {
       customer_name, customer_lastname, customer_phone,
       customer_cedula, customer_company,
-      product_name, product_quantity, description,
+      product_id, product_name: rawProductName, product_quantity, description,
     } = req.body;
 
-    if (!customer_name || !customer_phone || !product_name) {
+    if (!customer_name || !customer_phone || (!rawProductName && !product_id)) {
       return res.status(400).json({ error: 'Nombre, teléfono y producto son requeridos.' });
     }
 
     const fullName = `${customer_name.trim()} ${(customer_lastname||'').trim()}`.trim();
+
+    // Resolver nombre del producto desde el catálogo
+    let product_name = rawProductName || '';
+    let resolvedProductPrice = 0;
+    if (product_id) {
+      try {
+        const productDoc = await db.collection('products').doc(product_id).get();
+        if (productDoc.exists) {
+          product_name = productDoc.data().name;
+          resolvedProductPrice = Number(productDoc.data().sale_price) || 0;
+        }
+      } catch (_) {}
+    }
 
     const descriptionText = [
       product_name   ? `Producto: ${product_name}` : '',
@@ -35,11 +48,19 @@ router.post('/public', async (req, res) => {
       customer_phone: customer_phone.trim(),
       customer_cedula: customer_cedula || '',
       customer_company: customer_company || '',
-      items: [],
       description: descriptionText,
       product_name: product_name || '',
       product_quantity: product_quantity || '',
-      total_price: 0,
+      total_price: product_id && resolvedProductPrice
+        ? resolvedProductPrice * (Number(product_quantity) || 1)
+        : 0,
+      items: product_id ? [{
+        product_id,
+        product_name: product_name,
+        quantity: Number(product_quantity) || 1,
+        unit_price: resolvedProductPrice,
+        subtotal: resolvedProductPrice * (Number(product_quantity) || 1),
+      }] : [],
       deposit: 0,
       balance_due: 0,
       status: 'cola',
