@@ -25,7 +25,7 @@ export default function OrderForm() {
 
   // Cargar productos del catálogo
   useEffect(() => {
-    fetch('/api/products')
+    fetch('/api/products/public')
       .then(r => r.json())
       .then(d => setProducts(d.data || []))
       .catch(() => setProducts([]))
