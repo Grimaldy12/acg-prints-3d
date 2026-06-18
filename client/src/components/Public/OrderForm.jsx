@@ -182,7 +182,7 @@ export default function OrderForm() {
                       <option value="">-- Selecciona un producto --</option>
                       {products.map(p => (
                         <option key={p.id || p._id} value={p.id || p._id}>
-                          {p.name} — ${Number(p.sale_price || 0).toFixed(2)}
+                          {p.name}
                         </option>
                       ))}
                     </select>
