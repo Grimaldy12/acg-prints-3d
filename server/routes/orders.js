@@ -4,6 +4,20 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
+/* ── Número consecutivo de recibo ───────────────────────────── */
+async function getNextReceiptNumber(db) {
+  const counterRef = db.collection('counters').doc('sales');
+  let nextNum = 1;
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(counterRef);
+    nextNum = doc.exists ? (doc.data().current || 0) + 1 : 1;
+    tx.set(counterRef, { current: nextNum }, { merge: true });
+  });
+  return String(nextNum).padStart(4, '0');
+}
+
+
+
 // ──────────────────────────────────────────────
 // POST /api/orders/public  — SIN autenticación
 // Formulario público para clientes
@@ -232,7 +246,8 @@ router.post('/', async (req, res) => {
     const docRef = await db.collection('orders').add(newOrder);
 
     if (newOrder.status === 'entregado') {
-      await db.collection('sales').add({ customer_id: newOrder.customer_id, customer_name: newOrder.customer_name, total: newOrder.total_price, discount: 0, status: 'entregado', notes: `Pedido creado y entregado: ${newOrder.description||''}`, items: newOrder.items, created_at: new Date().toISOString() });
+      const rn1 = await getNextReceiptNumber(db);
+      await db.collection('sales').add({ customer_id: newOrder.customer_id, customer_name: newOrder.customer_name, total: newOrder.total_price, discount: 0, status: 'entregado', notes: `Pedido creado y entregado: ${newOrder.description||''}`, items: newOrder.items, receipt_number: rn1, receipt_seq: parseInt(rn1), created_at: new Date().toISOString() });
     }
 
     res.status(201).json({ data: { id: docRef.id, ...newOrder } });
@@ -274,7 +289,8 @@ router.put('/:id', async (req, res) => {
     await docRef.update(updatedOrder);
 
     if (status === 'entregado' && existing.status !== 'entregado') {
-      await db.collection('sales').add({ customer_id: updatedOrder.customer_id, customer_name: updatedOrder.customer_name, total: updatedOrder.total_price, discount: 0, status: 'entregado', notes: `Pedido entregado: ${updatedOrder.description||''}`, items: updatedOrder.items, created_at: new Date().toISOString() });
+      const rn2 = await getNextReceiptNumber(db);
+      await db.collection('sales').add({ customer_id: updatedOrder.customer_id, customer_name: updatedOrder.customer_name, total: updatedOrder.total_price, discount: 0, status: 'entregado', notes: `Pedido entregado: ${updatedOrder.description||''}`, items: updatedOrder.items, receipt_number: rn2, receipt_seq: parseInt(rn2), created_at: new Date().toISOString() });
     }
 
     const finalDoc = await docRef.get();
